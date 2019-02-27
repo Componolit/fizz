@@ -170,7 +170,7 @@ include(ExternalProject)
 ExternalProject_Add(
     GreenTLSProject
     SOURCE_DIR "${CMAKE_SOURCE_DIR}"
-    BUILD_COMMAND gprbuild -P${CMAKE_SOURCE_DIR}/contrib/greentls/greentls
+    BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/contrib/greentls
     BUILD_ALWAYS 1
     INSTALL_COMMAND ""
 )
