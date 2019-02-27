@@ -8,6 +8,8 @@
 
 #include <fizz/record/RecordLayer.h>
 
+#include "greentls.h"
+
 namespace fizz {
 
 using HandshakeTypeType = typename std::underlying_type<HandshakeType>::type;
@@ -18,6 +20,7 @@ static constexpr size_t kHandshakeHeaderSize =
 folly::Optional<Param> ReadRecordLayer::readEvent(
     folly::IOBufQueue& socketBuf) {
   if (!unparsedHandshakeData_.empty()) {
+    hello_world();
     auto param = decodeHandshakeMessage(unparsedHandshakeData_);
     if (param) {
       VLOG(8) << "Received handshake message "

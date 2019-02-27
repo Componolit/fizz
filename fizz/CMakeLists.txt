@@ -7,6 +7,8 @@ project("fizz" VERSION 1.0.0 LANGUAGES CXX C)
 
 add_compile_options(-std=c++14)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 
@@ -163,9 +165,33 @@ target_include_directories(
     ${DOUBLE_CONVERSION_INCLUDE_DIRS}
 )
 
+include(ExternalProject)
+
+ExternalProject_Add(
+    GreenTLSProject
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}"
+    BUILD_COMMAND gprbuild -P${CMAKE_SOURCE_DIR}/contrib/greentls/greentls
+    BUILD_ALWAYS 1
+    INSTALL_COMMAND ""
+)
+
+add_library(greentls STATIC IMPORTED)
+set_target_properties(greentls PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/contrib/greentls/lib/libgreentls.a"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/contrib/greentls/include"
+)
+add_dependencies(greentls GreenTLSProject)
+
+find_library(GNAT_LIB gnat)
+add_library(gnat SHARED IMPORTED)
+set_target_properties(gnat PROPERTIES
+  IMPORTED_LOCATION "${GNAT_LIB}"
+)
 
 target_link_libraries(fizz
   PUBLIC
+    greentls
+    gnat
     ${FOLLY_LIBRARIES}
     ${Boost_LIBRARIES}
     ${OPENSSL_LIBRARIES}
