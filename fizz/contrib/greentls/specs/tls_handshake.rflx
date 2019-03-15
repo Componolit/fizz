@@ -11,6 +11,7 @@ package TLS_Handshake is
       HANDSHAKE_CERTIFICATE_VERIFY => 15,
       HANDSHAKE_FINISHED => 20,
       HANDSHAKE_KEY_UPDATE => 24,
+      HANDSHAKE_COMPRESSED_CERTIFICATE => 25,  -- draft-ietf-tls-certificate-compression
       HANDSHAKE_MESSAGE_HASH => 254
    ) with Size => 8;
 
