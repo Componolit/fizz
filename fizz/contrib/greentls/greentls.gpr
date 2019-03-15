@@ -7,7 +7,7 @@ library project GreenTLS is
    for Library_Dir use "lib";
    for Library_Name use "greentls";
    for Library_Kind use "static-pic";
-   for Library_Interface use ("GreenTLS");
+   for Library_Interface use ("CPP", "RFLX", "RFLX.Types");
 
    package Builder is
        for Global_Compilation_Switches ("Ada") use ("-g");
