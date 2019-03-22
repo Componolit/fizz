@@ -1,5 +1,6 @@
 with CPP;
 with RFLX.Types; use type RFLX.Types.Byte; use type RFLX.Types.Length_Type;
+with RFLX.TLS_Alert.Alert; use RFLX.TLS_Alert;
 with RFLX.TLS_Handshake; use RFLX.TLS_Handshake;
 with RFLX.TLS_Handshake.Handshake;
 with RFLX.TLS_Handshake.Contains;
@@ -481,5 +482,23 @@ is
 
       end if;
    end Parse_Handshake_Message;
+
+   procedure Parse_Alert_Message (Buffer :     RFLX.Types.Bytes;
+                                  Result : out CPP.Alert_Record) is
+      Level       : Alert_Level;
+      Description : Alert_Description;
+   begin
+      Result := (Level => 255, Description => 255);
+
+      Alert.Label (Buffer);
+      if Alert.Is_Valid (Buffer) then
+
+         Level := Alert.Get_Level (Buffer);
+         Description := Alert.Get_Description (Buffer);
+
+         Result := (Level => CPP.Uint8_T (Convert_To_Alert_Level_Base (Level)),
+                    Description => CPP.Uint8_T (Convert_To_Alert_Description_Base (Description)));
+      end if;
+   end Parse_Alert_Message;
 
 end Parser;

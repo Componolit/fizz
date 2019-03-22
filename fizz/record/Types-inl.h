@@ -10,6 +10,8 @@
 #include <folly/String.h>
 #include <folly/io/Cursor.h>
 
+#include "greentls.hpp"
+
 namespace fizz {
 namespace detail {
 
@@ -608,12 +610,20 @@ inline NewSessionTicket decode<NewSessionTicket>(folly::io::Cursor& cursor) {
   return nst;
 }
 
-template <>
-inline Alert decode(folly::io::Cursor& cursor) {
-  Alert alert;
-  detail::read(alert.level, cursor);
-  detail::read(alert.description, cursor);
-  return alert;
+inline Alert parseAlert(folly::io::Cursor& cursor) {
+  Buf alertMsg;
+  cursor.clone(alertMsg, 2);
+  std::unique_ptr<AlertRecord> alertRecord(new AlertRecord());
+  AlertRecord *record = alertRecord.get();
+  parseAlertMessage(alertMsg->data(), alertMsg->length(), &record);
+
+  Alert alert = Alert();
+  if (record->level == 255 and record->description == 255) {
+    throw std::runtime_error("invalid alert message");
+  }
+  alert.level = record->level;
+  alert.description = AlertDescription(record->description);
+  return std::move(alert);
 }
 
 template <>

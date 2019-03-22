@@ -218,6 +218,14 @@ is
      with
        Convention => C;
 
+   type Alert_Record is
+      record
+         Level       : Uint8_T;
+         Description : Uint8_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Handshake_Message (Buffer_Address :        System.Address;
                                       Buffer_Length  :        Interfaces.C.Size_T;
                                       Result_Address : in out System.Address) with
@@ -225,5 +233,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseHandshakeMessage";
+
+   procedure Parse_Alert_Message (Buffer_Address :        System.Address;
+                                  Buffer_Length  :        Interfaces.C.Size_T;
+                                  Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseAlertMessage";
 
 end CPP;

@@ -43,7 +43,8 @@ folly::Optional<Param> ReadRecordLayer::readEvent(
 
     switch (message->type) {
       case ContentType::alert: {
-        auto alert = decode<Alert>(std::move(message->fragment));
+        folly::io::Cursor cursor(message->fragment.get());
+        auto alert = parseAlert(cursor);
         if (alert.description == AlertDescription::close_notify) {
           return Param(CloseNotify(socketBuf.move()));
         } else {

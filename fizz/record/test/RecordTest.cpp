@@ -74,7 +74,7 @@ TEST_F(RecordTest, TestReadAppData) {
 
 TEST_F(RecordTest, TestAlert) {
   EXPECT_CALL(read_, read(_)).WillOnce(InvokeWithoutArgs([]() {
-    return TLSMessage{ContentType::alert, getBuf("0202")};
+    return TLSMessage{ContentType::alert, getBuf("020A")};
   }));
   auto param = read_.readEvent(queue_);
   boost::get<Alert>(*param);

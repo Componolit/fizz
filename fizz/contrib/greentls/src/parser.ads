@@ -11,4 +11,7 @@ is
    procedure Parse_Handshake_Message (Buffer :     RFLX.Types.Bytes;
                                       Result : out CPP.Handshake_Record);
 
+   procedure Parse_Alert_Message (Buffer :     RFLX.Types.Bytes;
+                                  Result : out CPP.Alert_Record);
+
 end Parser;

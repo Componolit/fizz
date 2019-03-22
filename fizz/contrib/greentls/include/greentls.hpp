@@ -101,11 +101,17 @@ struct HandshakeRecord {
     HandshakeVariants content;
 };
 
+struct AlertRecord {
+    uint8_t level;
+    uint8_t description;
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 extern void parseHandshakeMessage(const uint8_t*, size_t, HandshakeRecord**);
+extern void parseAlertMessage(const uint8_t*, size_t, AlertRecord**);
 
 #if defined(__cplusplus)
 }

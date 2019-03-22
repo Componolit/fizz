@@ -57,7 +57,7 @@ folly::Optional<Buf> EncryptedReadRecordLayer::getDecryptedBuf(
     }
 
     if (contentType == ContentType::alert && length == 2) {
-      auto alert = decode<Alert>(cursor);
+      auto alert = parseAlert(cursor);
       throw std::runtime_error(folly::to<std::string>(
           "received plaintext alert in encrypted record: ",
           toString(alert.description)));
