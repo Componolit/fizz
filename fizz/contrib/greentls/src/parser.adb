@@ -51,11 +51,11 @@ is
          Tag := Extension.Get_Tag (Buffer (Cursor.First .. Cursor.Last));
          if Tag.Known then
             Result (Index) := (Tag => CPP.Uint16_T (Convert_To_Extension_Type_Base (Tag.Enum)),
-                               Length => CPP.Uint16_T (Extension.Get_Extension_Data_Length (Buffer (Cursor.First .. Cursor.Last))),
+                               Length => CPP.Uint16_T (Extension.Get_Data_Length (Buffer (Cursor.First .. Cursor.Last))),
                                Offset => CPP.Uint32_T (Cursor.First + 3));
          else  --  FIXME: Fizz expects also to get unknown extensions from parser
             Result (Index) := (Tag => CPP.Uint16_T (Tag.Raw),
-                               Length => CPP.Uint16_T (Extension.Get_Extension_Data_Length (Buffer (Cursor.First .. Cursor.Last))),
+                               Length => CPP.Uint16_T (Extension.Get_Data_Length (Buffer (Cursor.First .. Cursor.Last))),
                                Offset => CPP.Uint32_T (Cursor.First + 3));
          end if;
 

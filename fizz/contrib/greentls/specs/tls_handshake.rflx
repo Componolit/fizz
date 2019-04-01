@@ -53,15 +53,15 @@ package TLS_Handshake is
       EXTENSION_KEY_SHARE => 51
    ) with Size => 16, Always_Valid;
 
-   type Extension_Data_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
+   type Data_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
 
    type Extension is
       message
          Tag : Extension_Type;
-         Extension_Data_Length : Extension_Data_Length_Type
-            then Extension_Data
-               with Length => Extension_Data_Length;
-         Extension_Data : Payload_Type;
+         Data_Length : Data_Length_Type
+            then Data
+               with Length => Data_Length;
+         Data : Payload_Type;
       end message;
 
    --  type Heartbeat_In_Extension is Extension (Extension_Data => Heartbeat_Extension)
