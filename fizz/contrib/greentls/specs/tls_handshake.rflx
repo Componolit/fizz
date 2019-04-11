@@ -30,17 +30,17 @@ package TLS_Handshake is
 
    type Extension_Type is (
       EXTENSION_SERVER_NAME => 0,
-      EXTENSION_MAX_FRAGMENT_LENGTH => 1,
-      EXTENSION_STATUS_REQUEST => 5,
+      EXTENSION_MAX_FRAGMENT_LENGTH => 1,  -- unsupported
+      EXTENSION_STATUS_REQUEST => 5,  -- unsupported
       EXTENSION_SUPPORTED_GROUPS => 10,
       EXTENSION_SIGNATURE_ALGORITHMS => 13,
-      EXTENSION_USE_SRTP => 14,
-      EXTENSION_HEARTBEAT => 15,
+      EXTENSION_USE_SRTP => 14,  -- unsupported
+      EXTENSION_HEARTBEAT => 15,  -- unsupported
       EXTENSION_APPLICATION_LAYER_PROTOCOL_NEGOTIATION => 16,
-      EXTENSION_SIGNED_CERTIFICATE_TIMESTAMP => 18,
-      EXTENSION_CLIENT_CERTIFICATE_TYPE => 19,
-      EXTENSION_SERVER_CERTIFICATE_TYPE => 20,
-      EXTENSION_PADDING => 21,
+      EXTENSION_SIGNED_CERTIFICATE_TIMESTAMP => 18,  -- unsupported
+      EXTENSION_CLIENT_CERTIFICATE_TYPE => 19,  -- unsupported
+      EXTENSION_SERVER_CERTIFICATE_TYPE => 20,  -- unsupported
+      EXTENSION_PADDING => 21,  -- unsupported
       EXTENSION_PRE_SHARED_KEY => 41,
       EXTENSION_EARLY_DATA => 42,
       EXTENSION_SUPPORTED_VERSIONS => 43,
@@ -64,8 +64,28 @@ package TLS_Handshake is
          Data : Payload_Type;
       end message;
 
-   --  type Heartbeat_In_Extension is Extension (Extension_Data => Heartbeat_Extension)
-   --     if Tag = HEARTBEAT;
+   type Extensions is array of Extension;
+
+   type CH_Extension is new Extension;
+   type CH_Extensions is array of CH_Extension;
+
+   type SH_Extension is new Extension;
+   type SH_Extensions is array of SH_Extension;
+
+   type HRR_Extension is new Extension;
+   type HRR_Extensions is array of HRR_Extension;
+
+   type EE_Extension is new Extension;
+   type EE_Extensions is array of EE_Extension;
+
+   type CT_Extension is new Extension;
+   type CT_Extensions is array of CT_Extension;
+
+   type CR_Extension is new Extension;
+   type CR_Extensions is array of CR_Extension;
+
+   type NST_Extension is new Extension;
+   type NST_Extensions is array of NST_Extension;
 
    -- Key Exchange Messages
 
@@ -77,7 +97,6 @@ package TLS_Handshake is
    type Legacy_Compression_Methods_Length_Type is range 1 .. 1 with Size => 8;
    type Legacy_Compression_Methods_Type is range 0 .. 0 with Size => 8;
    type Client_Hello_Extensions_Length_Type is range 8 .. 2**16 - 1 with Size => 16;
-   type Extensions is array of Extension;
 
    type Client_Hello is
       message
@@ -105,10 +124,10 @@ package TLS_Handshake is
          Extensions_Length : Client_Hello_Extensions_Length_Type
             then Extensions
                with Length => Extensions_Length * 8;
-         Extensions : Extensions;
+         Extensions : CH_Extensions;
       end message;
 
-   type Client_Hello_Handshake is new Handshake (Payload => Client_Hello)
+   for Handshake use (Payload => Client_Hello)
       if Tag = HANDSHAKE_CLIENT_HELLO;
 
    type Legacy_Compression_Method_Type is range 0 .. 0 with Size => 8;
@@ -129,11 +148,17 @@ package TLS_Handshake is
          Legacy_Compression_Method : Legacy_Compression_Method_Type;
          Extensions_Length : Server_Hello_Extensions_Length_Type
             then Extensions
-               with Length => Extensions_Length * 8;
-         Extensions : Extensions;
+               with Length => Extensions_Length * 8
+               if Random /= (16#CF#, 16#21#, 16#AD#, 16#74#, 16#E5#, 16#9A#, 16#61#, 16#11#, 16#BE#, 16#1D#, 16#8C#, 16#02#, 16#1E#, 16#65#, 16#B8#, 16#91#, 16#C2#, 16#A2#, 16#11#, 16#16#, 16#7A#, 16#BB#, 16#8C#, 16#5E#, 16#07#, 16#9E#, 16#09#, 16#E2#, 16#C8#, 16#A8#, 16#33#, 16#9C#),
+            then HRR_Extensions
+               with Length => Extensions_Length * 8
+               if Random = (16#CF#, 16#21#, 16#AD#, 16#74#, 16#E5#, 16#9A#, 16#61#, 16#11#, 16#BE#, 16#1D#, 16#8C#, 16#02#, 16#1E#, 16#65#, 16#B8#, 16#91#, 16#C2#, 16#A2#, 16#11#, 16#16#, 16#7A#, 16#BB#, 16#8C#, 16#5E#, 16#07#, 16#9E#, 16#09#, 16#E2#, 16#C8#, 16#A8#, 16#33#, 16#9C#);
+         Extensions : SH_Extensions
+            then null;
+         HRR_Extensions : HRR_Extensions;
       end message;
 
-   type Server_Hello_Handshake is new Handshake (Payload => Server_Hello)
+   for Handshake use (Payload => Server_Hello)
       if Tag = HANDSHAKE_SERVER_HELLO;
 
    -- Server Parameters
@@ -145,10 +170,10 @@ package TLS_Handshake is
          Length : Encrypted_Extensions_Length_Type
             then Extensions
                with Length => Length * 8;
-         Extensions : Extensions;
+         Extensions : EE_Extensions;
       end message;
 
-   type Encrypted_Extensions_Handshake is new Handshake (Payload => Encrypted_Extensions)
+   for Handshake use (Payload => Encrypted_Extensions)
       if Tag = HANDSHAKE_ENCRYPTED_EXTENSIONS;
 
    type Certificate_Request_Context_Length_Type is range 0 .. 2**8 - 1 with Size => 8;
@@ -163,10 +188,10 @@ package TLS_Handshake is
          Extensions_Length : Certificate_Request_Extensions_Length_Type
             then Extensions
                with Length => Extensions_Length * 8;
-         Extensions : Extensions;
+         Extensions : CR_Extensions;
       end message;
 
-   type Certificate_Request_Handshake is new Handshake (Payload => Certificate_Request)
+   for Handshake use (Payload => Certificate_Request)
       if Tag = HANDSHAKE_CERTIFICATE_REQUEST;
 
    -- Authentication Messages
@@ -186,7 +211,7 @@ package TLS_Handshake is
          Extensions_Length : Certificate_Extensions_Length_Type
             then Extensions
                with Length => Extensions_Length * 8;
-         Extensions : Extensions;
+         Extensions : CT_Extensions;
       end message;
 
    type Certificate_List_Length_Type is range 0 .. 2**24 - 1 with Size => 24;
@@ -204,7 +229,7 @@ package TLS_Handshake is
          Certificate_List : Certificate_Entries;
       end message;
 
-   type Certificate_Handshake is new Handshake (Payload => Certificate)
+   for Handshake use (Payload => Certificate)
       if Tag = HANDSHAKE_CERTIFICATE;
 
    type Signature_Scheme is (
@@ -237,7 +262,7 @@ package TLS_Handshake is
          Signature : Payload_Type;
       end message;
 
-   type Certificate_Verify_Handshake is new Handshake (Payload => Certificate_Verify)
+   for Handshake use (Payload => Certificate_Verify)
       if Tag = HANDSHAKE_CERTIFICATE_VERIFY;
 
    type Finished is
@@ -248,12 +273,14 @@ package TLS_Handshake is
          Verify_Data : Payload_Type;
       end message;
 
-   type Finished_Handshake is new Handshake (Payload => Finished)
+   for Handshake use (Payload => Finished)
       if Tag = HANDSHAKE_FINISHED;
 
    -- End of Early Data
 
-   type End_Of_Early_Data_Handshake is new Handshake (Payload => null)
+   type End_Of_Early_Data is null message;
+
+   for Handshake use (Payload => End_Of_Early_Data)
       if Tag = HANDSHAKE_END_OF_EARLY_DATA;
 
    -- Post-Handshake Messages
@@ -279,10 +306,10 @@ package TLS_Handshake is
          Extensions_Length : New_Session_Ticket_Extensions_Length_Type
             then Extensions
                with Length => Extensions_Length * 8;
-         Extensions : Extensions;
+         Extensions : NST_Extensions;
       end message;
 
-   type New_Session_Ticket_Handshake is new Handshake (Payload => New_Session_Ticket)
+   for Handshake use (Payload => New_Session_Ticket)
       if Tag = HANDSHAKE_NEW_SESSION_TICKET;
 
    type Key_Update_Request is (UPDATE_NOT_REQUESTED => 0, UPDATE_REQUESTED => 1) with Size => 8;
@@ -292,7 +319,370 @@ package TLS_Handshake is
          Request_Update : Key_Update_Request;
       end message;
 
-   type Key_Update_Handshake is new Handshake (Payload => Key_Update)
+   for Handshake use (Payload => Key_Update)
       if Tag = HANDSHAKE_KEY_UPDATE;
+
+   -- Extensions
+
+   -- -- Server Name
+
+   type Name_Type is (HOST_NAME => 0) with Size => 8;
+   type Name_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+
+   type Server_Name is
+      message
+         Name_Type : Name_Type
+            then Length
+               if Name_Type = HOST_NAME,
+            then null
+               if Name_Type /= HOST_NAME;
+         Length : Name_Length_Type
+            then Name
+               with Length => Length;
+         Name : Payload_Type;
+      end message;
+
+   type Server_Name_List_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+   type Server_Names is array of Server_Name;
+
+   type Server_Name_List is
+      message
+         Length : Server_Name_List_Length_Type
+            then Server_Name_List
+               with Length => Length;
+         Server_Name_List : Server_Names;
+      end message;
+
+   for CH_Extension use (Data => Server_Name_List)
+      if Tag = EXTENSION_SERVER_NAME;
+   for EE_Extension use (Data => Server_Name_List)
+      if Tag = EXTENSION_SERVER_NAME;
+
+   -- -- Supported Versions
+
+   type Supported_Versions_Length_Type is range 2 .. 254 with Size => 8;
+   type Protocol_Versions is array of Protocol_Version_Type;
+
+   type Supported_Versions is
+      message
+         Length : Supported_Versions_Length_Type
+            then Versions
+               with Length => Length;
+         Versions : Protocol_Versions;
+      end message;
+
+   type Supported_Version is
+      message
+         Version : Protocol_Version_Type;
+      end message;
+
+   for CH_Extension use (Data => Supported_Versions)
+      if Tag = EXTENSION_SUPPORTED_VERSIONS;
+   for SH_Extension use (Data => Supported_Version)
+      if Tag = EXTENSION_SUPPORTED_VERSIONS;
+   for HRR_Extension use (Data => Supported_Version)
+      if Tag = EXTENSION_SUPPORTED_VERSIONS;
+
+   -- -- Cookie
+
+   type Cookie_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+
+   type Cookie is
+      message
+         Length : Cookie_Length_Type
+            then Cookie
+               with Length => Length;
+         Cookie : Payload_Type;
+      end message;
+
+   for CH_Extension use (Data => Cookie)
+      if Tag = EXTENSION_COOKIE;
+   for HRR_Extension use (Data => Cookie)
+      if Tag = EXTENSION_COOKIE;
+
+   -- -- Signature Algorithms
+
+   type Signature_Algorithms_Length_Type is range 2 .. 2**16 - 2 with Size => 16;
+   type Signature_Schemes is array of Signature_Scheme;
+
+   type Signature_Algorithms is
+      message
+         Length : Signature_Algorithms_Length_Type
+            then Algorithms
+               with Length => Length;
+         Algorithms : Signature_Schemes;
+      end message;
+
+   for CH_Extension use (Data => Signature_Algorithms)
+      if Tag = EXTENSION_SIGNATURE_ALGORITHMS;
+   for CR_Extension use (Data => Signature_Algorithms)
+      if Tag = EXTENSION_SIGNATURE_ALGORITHMS;
+
+   type Signature_Algorithms_Cert is
+      message
+         Length : Signature_Algorithms_Length_Type
+            then Algorithms
+               with Length => Length;
+         Algorithms : Signature_Schemes;
+      end message;
+
+   for CH_Extension use (Data => Signature_Algorithms_Cert)
+      if Tag = EXTENSION_SIGNATURE_ALGORITHMS_CERT;
+   for CR_Extension use (Data => Signature_Algorithms_Cert)
+      if Tag = EXTENSION_SIGNATURE_ALGORITHMS_CERT;
+
+   -- -- Certificate Authorities
+
+   type Certificate_Authorities_Length_Type is range 3 .. 2**16 - 1 with Size => 16;
+   type Distinguished_Name_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+
+   type Distinguished_Name is
+      message
+         Length : Distinguished_Name_Length_Type
+            then Name
+               with Length => Length;
+         Name : Payload_Type;
+      end message;
+
+   type Distinguished_Names is array of Distinguished_Name;
+
+   type Certificate_Authorities is
+      message
+         Length : Certificate_Authorities_Length_Type
+            then Authorities
+               with Length => Length;
+         Authorities : Distinguished_Names;
+      end message;
+
+   for CH_Extension use (Data => Certificate_Authorities)
+      if Tag = EXTENSION_CERTIFICATE_AUTHORITIES;
+   for CR_Extension use (Data => Certificate_Authorities)
+      if Tag = EXTENSION_CERTIFICATE_AUTHORITIES;
+
+   -- -- OID Filters
+
+   type Filters_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
+   type OID_Length_Type is range 1 .. 2**8 - 1 with Size => 8;
+   type Values_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
+
+   type Filter is
+      message
+         OID_Length : OID_Length_Type
+            then OID
+               with Length => OID_Length;
+         OID : Payload_Type;
+         Values_Length : Values_Length_Type
+            then Values
+               with Length => Values_Length;
+         Values : Payload_Type;
+      end message;
+
+   type Filters is array of Filter;
+
+   type OID_Filters is
+      message
+         Length : Filters_Length_Type
+            then Filters
+               with Length => Length;
+         Filters : Filters;
+      end message;
+
+   for CR_Extension use (Data => OID_Filters)
+      if Tag = EXTENSION_OID_FILTERS;
+
+   -- -- Post-Handshake Client Authentication
+
+   type Post_Handshake_Auth is null message;
+
+   for CH_Extension use (Data => Post_Handshake_Auth)
+      if Tag = EXTENSION_POST_HANDSHAKE_AUTH;
+
+   -- -- Supported Groups
+
+   type Supported_Groups_Length_Type is range 2 .. 2**16 - 1 with Size => 16;
+
+   type Named_Group is (
+      --  Elliptic Curve Groups (ECDHE)
+      SECP256R1 => 16#0017#,
+      SECP384R1 => 16#0018#,
+      SECP521R1 => 16#0019#,
+      X25519    => 16#001D#,
+      X448      => 16#001E#,
+      --  Finite Field Groups (DHE)
+      FFDHE2048 => 16#0100#,
+      FFDHE3072 => 16#0101#,
+      FFDHE4096 => 16#0102#,
+      FFDHE6144 => 16#0103#,
+      FFDHE8192 => 16#0104#) with Size => 16;
+
+   type Named_Groups is array of Named_Group;
+
+   type Supported_Groups is
+      message
+         Length : Supported_Groups_Length_Type
+            then Groups
+               with Length => Length;
+         Groups : Named_Groups;
+      end message;
+
+   for CH_Extension use (Data => Supported_Groups)
+      if Tag = EXTENSION_SUPPORTED_GROUPS;
+   for EE_Extension use (Data => Supported_Groups)
+      if Tag = EXTENSION_SUPPORTED_GROUPS;
+
+   -- -- Key Share
+
+   type Key_Exchange_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+
+   type Key_Share_Entry is
+      message
+         Group : Named_Group;
+         Length : Key_Exchange_Length_Type
+            then Key_Exchange
+               with Length => Length;
+         Key_Exchange : Payload_Type;
+      end message;
+
+   type Key_Share_Entries is array of Key_Share_Entry;
+
+   type Key_Shares_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
+
+   type Key_Share_CH is
+      message
+         Length : Key_Shares_Length_Type
+            then Shares
+               with Length => Length;
+         Shares : Key_Share_Entries;
+      end message;
+
+   type Key_Share_HRR is
+      message
+         Selected_Group : Named_Group;
+      end message;
+
+   for CH_Extension use (Data => Key_Share_CH)
+      if Tag = EXTENSION_KEY_SHARE;
+   for SH_Extension use (Data => Key_Share_Entry)
+      if Tag = EXTENSION_KEY_SHARE;
+   for HRR_Extension use (Data => Key_Share_HRR)
+      if Tag = EXTENSION_KEY_SHARE;
+
+   -- -- Pre-Shared Key Exchange Modes
+
+   type PSK_Key_Exchange_Modes_Length_Type is range 1 .. 255 with Size => 8;
+   type Key_Exchange_Mode is (PSK_KE => 0, PSK_DHE_KE => 1) with Size => 8;
+   type Key_Exchange_Modes is array of Key_Exchange_Mode;
+
+   type PSK_Key_Exchange_Modes is
+      message
+         Length : PSK_Key_Exchange_Modes_Length_Type
+            then Modes
+               with Length => Length;
+         Modes : Key_Exchange_Modes;
+      end message;
+
+   for CH_Extension use (Data => PSK_Key_Exchange_Modes)
+      if Tag = EXTENSION_PSK_KEY_EXCHANGE_MODES;
+
+   -- -- Early Data Indication
+
+   type Max_Early_Data_Size_Type is mod 2**32;
+
+   type Early_Data_Indication is
+      message
+         Max_Early_Data_Size : Max_Early_Data_Size_Type;
+      end message;
+
+   type Early_Data is null message;
+
+   for CH_Extension use (Data => Early_Data)
+      if Tag = EXTENSION_EARLY_DATA;
+   for EE_Extension use (Data => Early_Data)
+      if Tag = EXTENSION_EARLY_DATA;
+   for NST_Extension use (Data => Early_Data_Indication)
+      if Tag = EXTENSION_EARLY_DATA;
+
+   -- -- Pre-Shared Key Extension
+
+   type Identity_Length_Type is range 1 .. 2**16 - 1 with Size => 16;
+   type Obfuscated_Ticket_Age_Type is mod 2**32;
+
+   type PSK_Identity is
+      message
+         Length : Identity_Length_Type
+            then Identity
+               with Length => Length;
+         Identity : Payload_Type;
+         Obfuscated_Ticket_Age : Obfuscated_Ticket_Age_Type;
+      end message;
+
+   type PSK_Identities is array of PSK_Identity;
+
+   type PSK_Binder_Entry_Length_Type is range 32 .. 255 with Size => 8;
+
+   type PSK_Binder_Entry is
+      message
+         Length : PSK_Binder_Entry_Length_Type
+            then PSK_Binder_Entry
+               with Length => Length;
+         PSK_Binder_Entry : Payload_Type;
+      end message;
+
+   type PSK_Binder_Entries is array of PSK_Binder_Entry;
+
+   type Identities_Length_Type is range 7 .. 2**16 - 1 with Size => 16;
+   type Binders_Length_Type is range 33 .. 2**16 - 1 with Size => 16;
+
+   type Pre_Shared_Key_CH is
+      message
+         Identities_Length : Identities_Length_Type
+            then Identities
+               with Length => Identities_Length;
+         Identities : PSK_Identities;
+         Binders_Length : Binders_Length_Type
+            then Binders
+               with Length => Binders_Length;
+         Binders : PSK_Binder_Entries;
+      end message;
+
+   type Identity_Type is mod 2**16;
+
+   type Pre_Shared_Key_SH is
+      message
+         Selected_Identity : Identity_Type;
+      end message;
+
+   for CH_Extension use (Data => Pre_Shared_Key_CH)
+      if Tag = EXTENSION_PRE_SHARED_KEY;
+   for SH_Extension use (Data => Pre_Shared_Key_SH)
+      if Tag = EXTENSION_PRE_SHARED_KEY;
+
+   -- -- Application-Layer Protocol Negotiation
+
+   type Protocol_Name_Length_Type is range 1 .. 2**8 - 1 with Size => 8;
+
+   type Protocol_Name is
+      message
+         Length : Protocol_Name_Length_Type
+            then Name
+               with Length => Length;
+         Name : Payload;
+      end message;
+
+   type Protocol_Names is array of Protocol_Name;
+   type Protocol_Name_List_Length_Type is range 2 .. 2**16 - 1 with Size => 16;
+
+   type Protocol_Name_List is
+      message
+         Length : Protocol_Name_List_Length_Type
+            then Protocol_Name_List
+               with Length => Length;
+         Protocol_Name_List : Protocol_Names;
+      end message;
+
+   for CH_Extension use (Data => Protocol_Name_List)
+      if Tag = EXTENSION_APPLICATION_LAYER_PROTOCOL_NEGOTIATION;
+   for EE_Extension use (Data => Protocol_Name_List)
+      if Tag = EXTENSION_APPLICATION_LAYER_PROTOCOL_NEGOTIATION;
 
 end TLS_Handshake;
