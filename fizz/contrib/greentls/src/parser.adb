@@ -16,8 +16,21 @@ with RFLX.TLS_Handshake.Certificate_Verify;
 with RFLX.TLS_Handshake.Finished;
 with RFLX.TLS_Handshake.Key_Update;
 with RFLX.TLS_Handshake.Cipher_Suites;
-with RFLX.TLS_Handshake.Extensions;
 with RFLX.TLS_Handshake.Extension;
+with RFLX.TLS_Handshake.CH_Extension;
+with RFLX.TLS_Handshake.CH_Extensions;
+with RFLX.TLS_Handshake.SH_Extension;
+with RFLX.TLS_Handshake.SH_Extensions;
+with RFLX.TLS_Handshake.HRR_Extension;
+with RFLX.TLS_Handshake.HRR_Extensions;
+with RFLX.TLS_Handshake.EE_Extension;
+with RFLX.TLS_Handshake.EE_Extensions;
+with RFLX.TLS_Handshake.CT_Extension;
+with RFLX.TLS_Handshake.CT_Extensions;
+with RFLX.TLS_Handshake.CR_Extension;
+with RFLX.TLS_Handshake.CR_Extensions;
+with RFLX.TLS_Handshake.NST_Extension;
+with RFLX.TLS_Handshake.NST_Extensions;
 
 package body Parser with
   SPARK_Mode
@@ -25,10 +38,7 @@ is
 
    procedure Parse_Extensions (Buffer :        RFLX.Types.Bytes;
                                Count  :    out CPP.Uint8_T;
-                               Result : in out CPP.Extension_Record_Array) with
-     Pre => Extensions.Is_Contained (Buffer)
-            and then Result'Length > 0
-            and then Result'Length < 256
+                               Result : in out CPP.Extension_Record_Array)
    is
       Index  : Integer := Result'First - 1;
       Cursor : Extensions.Cursor_Type;
@@ -69,6 +79,7 @@ is
                                  Result       : out CPP.Handshake_Record) with
      Pre => Client_Hello.Is_Contained (Buffer)
    is
+      procedure Parse_CH_Extensions is new Parse_Extensions (CH_Extension, CH_Extensions);
    begin
       if Client_Hello.Is_Valid (Buffer) then
          declare
@@ -106,7 +117,7 @@ is
             end loop;
 
             Client_Hello.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            Parse_CH_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
             Result := (Tag => 1,
                        Content => (Tag => 1,
@@ -127,6 +138,8 @@ is
                                  Result       : out CPP.Handshake_Record) with
      Pre => Server_Hello.Is_Contained (Buffer)
    is
+      procedure Parse_SH_Extensions is new Parse_Extensions (SH_Extension, SH_Extensions);
+      procedure Parse_HRR_Extensions is new Parse_Extensions (HRR_Extension, HRR_Extensions);
    begin
       if Server_Hello.Is_Valid (Buffer) then
          declare
@@ -153,17 +166,33 @@ is
 
             Cipher_Suite := Server_Hello.Get_Cipher_Suite (Buffer);
 
-            Server_Hello.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            if Server_Hello.Valid_Extensions (Buffer) then
+               Server_Hello.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
+               Parse_SH_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
-            Result := (Tag => 2,
-                       Content => (Tag => 2,
-                                   Server_Hello => (Random,
-                                                    RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
-                                                    Legacy_Session_ID,
-                                                    CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite)),
-                                                    Extensions_Count,
-                                                    Extension_List)));
+               Result := (Tag => 2,
+                          Content => (Tag => 2,
+                                      Server_Hello => (Random,
+                                                       RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
+                                                       Legacy_Session_ID,
+                                                       CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite)),
+                                                       Extensions_Count,
+                                                       Extension_List)));
+            elsif Server_Hello.Valid_HRR_Extensions (Buffer) then
+               Server_Hello.Get_HRR_Extensions (Buffer, Extensions_First, Extensions_Last);
+               Parse_HRR_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+
+               Result := (Tag => 2,
+                          Content => (Tag => 2,
+                                      Server_Hello => (Random,
+                                                       RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
+                                                       Legacy_Session_ID,
+                                                       CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite)),
+                                                       Extensions_Count,
+                                                       Extension_List)));
+            else
+               Result := (Tag => 0, Content => (Tag => 0));
+            end if;
          end;
       else
          Result := (Tag => 0, Content => (Tag => 0));
@@ -174,6 +203,7 @@ is
                                        Result       : out CPP.Handshake_Record) with
      Pre => New_Session_Ticket.Is_Contained (Buffer)
    is
+      procedure Parse_NST_Extensions is new Parse_Extensions (NST_Extension, NST_Extensions);
    begin
       if New_Session_Ticket.Is_Valid (Buffer) then
          declare
@@ -199,7 +229,7 @@ is
             Ticket_First := New_Session_Ticket.Get_Ticket_First (Buffer);
 
             New_Session_Ticket.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            Parse_NST_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
             Result := (Tag => 4,
                        Content => (Tag => 4,
@@ -229,6 +259,7 @@ is
                                          Result       : out CPP.Handshake_Record) with
      Pre => Encrypted_Extensions.Is_Contained (Buffer)
    is
+      procedure Parse_EE_Extensions is new Parse_Extensions (EE_Extension, EE_Extensions);
    begin
       if Encrypted_Extensions.Is_Valid (Buffer) then
          declare
@@ -238,7 +269,7 @@ is
             Extension_List   : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
          begin
             Encrypted_Extensions.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            Parse_EE_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
             Result := (Tag => 8,
                        Content => (Tag => 8,
@@ -257,6 +288,7 @@ is
             and then Result'Length > 0
             and then Result'Length < 256
    is
+      procedure Parse_CT_Extensions is new Parse_Extensions (CT_Extension, CT_Extensions);
       Index  : Integer := Result'First - 1;
       Cursor : Certificate_Entries.Cursor_Type;
    begin
@@ -286,7 +318,7 @@ is
             Cert_Data_Length := Certificate_Entry.Get_Cert_Data_Length (Buffer (Cursor.First .. Cursor.Last));
             Cert_Data_First := Certificate_Entry.Get_Cert_Data_First (Buffer (Cursor.First .. Cursor.Last));
             Certificate_Entry.Get_Extensions (Buffer (Cursor.First .. Cursor.Last), Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            Parse_CT_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
             Result (Index) := (CPP.Uint32_T (Cert_Data_Length),
                                CPP.Uint32_T (Cert_Data_First - 1),
@@ -336,6 +368,7 @@ is
                                         Result : out CPP.Handshake_Record) with
      Pre => Certificate_Request.Is_Contained (Buffer)
    is
+      procedure Parse_CR_Extensions is new Parse_Extensions (CR_Extension, CR_Extensions);
    begin
       if Certificate_Request.Is_Valid (Buffer) then
          declare
@@ -349,7 +382,7 @@ is
             Length := Certificate_Request.Get_Certificate_Request_Context_Length (Buffer);
             First := Certificate_Request.Get_Certificate_Request_Context_First (Buffer);
             Certificate_Request.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-            Parse_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            Parse_CR_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
             Result := (Tag => 13,
                        Content => (Tag => 13,
@@ -444,34 +477,34 @@ is
 
          Handshake.Get_Payload (Buffer, First, Last);
 
-         if Contains.Client_Hello_Handshake (Buffer) then
+         if Contains.Client_Hello_In_Handshake_Payload (Buffer) then
             Parse_Client_Hello (Buffer (First .. Last), Result);
 
-         elsif Contains.Server_Hello_Handshake (Buffer) then
+         elsif Contains.Server_Hello_In_Handshake_Payload (Buffer) then
             Parse_Server_Hello (Buffer (First .. Last), Result);
 
-         elsif Contains.New_Session_Ticket_Handshake (Buffer) then
+         elsif Contains.New_Session_Ticket_In_Handshake_Payload (Buffer) then
             Parse_New_Session_Ticket (Buffer (First .. Last), Result);
 
-         elsif Contains.End_Of_Early_Data_Handshake (Buffer) then
+         elsif Contains.End_Of_Early_Data_In_Handshake_Payload (Buffer) then
             Parse_End_Of_Early_Data (Buffer (First .. Last), Result);
 
-         elsif Contains.Encrypted_Extensions_Handshake (Buffer) then
+         elsif Contains.Encrypted_Extensions_In_Handshake_Payload (Buffer) then
             Parse_Encrypted_Extensions (Buffer (First .. Last), Result);
 
-         elsif Contains.Certificate_Handshake (Buffer) then
+         elsif Contains.Certificate_In_Handshake_Payload (Buffer) then
             Parse_Certificate (Buffer (First .. Last), Result);
 
-         elsif Contains.Certificate_Request_Handshake (Buffer) then
+         elsif Contains.Certificate_Request_In_Handshake_Payload (Buffer) then
             Parse_Certificate_Request (Buffer (First .. Last), Result);
 
-         elsif Contains.Certificate_Verify_Handshake (Buffer) then
+         elsif Contains.Certificate_Verify_In_Handshake_Payload (Buffer) then
             Parse_Certificate_Verify (Buffer (First .. Last), Result);
 
-         elsif Contains.Finished_Handshake (Buffer) then
+         elsif Contains.Finished_In_Handshake_Payload (Buffer) then
             Parse_Finished (Buffer (First .. Last), Result);
 
-         elsif Contains.Key_Update_Handshake (Buffer) then
+         elsif Contains.Key_Update_In_Handshake_Payload (Buffer) then
             Parse_Key_Update (Buffer (First .. Last), Result);
 
          else
