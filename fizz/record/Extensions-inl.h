@@ -10,6 +10,8 @@
 
 #include <fizz/record/Types.h>
 
+#include "greentls_extensions.hpp"
+
 namespace fizz {
 
 inline std::vector<Extension>::const_iterator findExtension(
@@ -40,8 +42,21 @@ inline folly::Optional<T> getExtension(
 
 template <>
 inline SignatureAlgorithms getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+
+  std::unique_ptr<SignatureAlgorithmsRecord> recordPtr(new SignatureAlgorithmsRecord());
+  SignatureAlgorithmsRecord *record = recordPtr.get();
+  parseSignatureAlgorithms(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid signature algorithms extension", AlertDescription::decode_error);
+  }
+
   SignatureAlgorithms sigs;
-  detail::readVector<uint16_t>(sigs.supported_signature_algorithms, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    sigs.supported_signature_algorithms.push_back(SignatureScheme(record->algorithms[i]));
+  }
   return sigs;
 }
 
