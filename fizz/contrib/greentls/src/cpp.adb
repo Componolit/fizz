@@ -41,4 +41,17 @@ package body CPP is
       Extension_Parser.Parse_Signature_Algorithms (Buffer, Result);
    end Parse_Signature_Algorithms;
 
+   procedure Parse_Supported_Groups (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Supported_Groups_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Supported_Groups (Buffer, Result);
+   end Parse_Supported_Groups;
+
 end CPP;

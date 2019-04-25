@@ -62,8 +62,21 @@ inline SignatureAlgorithms getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline SupportedGroups getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+
+  std::unique_ptr<SupportedGroupsRecord> recordPtr(new SupportedGroupsRecord());
+  SupportedGroupsRecord *record = recordPtr.get();
+  parseSupportedGroups(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid supported groups extension", AlertDescription::decode_error);
+  }
+
   SupportedGroups groups;
-  detail::readVector<uint16_t>(groups.named_group_list, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    groups.named_group_list.push_back(NamedGroup(record->groups[i]));
+  }
   return groups;
 }
 

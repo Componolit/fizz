@@ -2902,7 +2902,7 @@ TEST_F(ServerProtocolTest, TestClientHelloNoSupportedGroups) {
       actions, AlertDescription::missing_extension, "no named groups");
 }
 
-TEST_F(ServerProtocolTest, TestClientHelloNamedGroupsMismatch) {
+TEST_F(ServerProtocolTest, TestClientHelloInvalidNamedGroup) {
   setUpExpectingClientHello();
   auto clientHello = TestMessages::clientHello();
   TestMessages::removeExtension(clientHello, ExtensionType::supported_groups);
@@ -2912,7 +2912,7 @@ TEST_F(ServerProtocolTest, TestClientHelloNamedGroupsMismatch) {
   auto actions =
       getActions(detail::processEvent(state_, std::move(clientHello)));
   expectError<FizzException>(
-      actions, AlertDescription::handshake_failure, "no group match");
+      actions, AlertDescription::decode_error, "invalid supported groups");
 }
 
 TEST_F(ServerProtocolTest, TestClientHelloNoClientKeyShare) {

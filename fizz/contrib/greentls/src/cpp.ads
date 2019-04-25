@@ -250,6 +250,14 @@ is
      with
        Convention => C;
 
+   type Supported_Groups_Record is
+      record
+         Count  : Uint8_T;
+         Groups : Uint16_T_Array (1 .. 16);
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -257,5 +265,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseSignatureAlgorithms";
+
+   procedure Parse_Supported_Groups (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseSupportedGroups";
 
 end CPP;

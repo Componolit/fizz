@@ -518,7 +518,8 @@ package TLS_Handshake is
       FFDHE3072 => 16#0101#,
       FFDHE4096 => 16#0102#,
       FFDHE6144 => 16#0103#,
-      FFDHE8192 => 16#0104#) with Size => 16;
+      FFDHE8192 => 16#0104#
+      ) with Size => 16;
 
    type Named_Groups is array of Named_Group;
 
