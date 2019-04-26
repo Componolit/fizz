@@ -99,14 +99,6 @@ Param parse<ServerHello>(Buf handshakeMsg, Buf original) {
   }
 }
 
-Buf cloneIntoBuf(Buf const& buf, uint32_t offset, uint32_t length) {
-    folly::io::Cursor cursor(buf.get());
-    cursor.skip(offset);
-    Buf result;
-    cursor.clone(result, length);
-    return std::move(result);
-}
-
 std::vector<Extension> convertExtensions(Buf const& buf,
                                          uint8_t extensions_count,
                                          ExtensionRecord extensions[]) {

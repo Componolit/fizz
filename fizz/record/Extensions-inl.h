@@ -82,22 +82,70 @@ inline SupportedGroups getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline ClientKeyShare getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 4294967296);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ClientKeyShareRecord> recordPtr(new ClientKeyShareRecord());
+  ClientKeyShareRecord *record = recordPtr.get();
+  parseClientKeyShare(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid key share extension (CH)", AlertDescription::decode_error);
+  }
+
   ClientKeyShare share;
-  detail::readVector<uint16_t>(share.client_shares, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    share.client_shares.push_back(
+      KeyShareEntry{
+        NamedGroup(record->shares[i].group),
+        cloneIntoBuf(buf, record->shares[i].key_exchange_offset, record->shares[i].key_exchange_length)});
+  }
   return share;
 }
 
 template <>
 inline ServerKeyShare getExtension(folly::io::Cursor& cs) {
-  ServerKeyShare share;
-  detail::read(share.server_share, cs);
+  Buf buf;
+  cs.cloneAtMost(buf, 4294967296);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ServerKeyShareRecord> recordPtr(new ServerKeyShareRecord());
+  ServerKeyShareRecord *record = recordPtr.get();
+  parseServerKeyShare(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid key share extension (SH)", AlertDescription::decode_error);
+  }
+
+  ServerKeyShare share{
+    NamedGroup(record->share.group),
+    cloneIntoBuf(buf, record->share.key_exchange_offset, record->share.key_exchange_length)};
   return share;
 }
 
 template <>
 inline HelloRetryRequestKeyShare getExtension(folly::io::Cursor& cs) {
-  HelloRetryRequestKeyShare share;
-  detail::read(share.selected_group, cs);
+  Buf buf;
+  cs.cloneAtMost(buf, 4294967296);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<HelloRetryRequestKeyShareRecord> recordPtr(new HelloRetryRequestKeyShareRecord());
+  HelloRetryRequestKeyShareRecord *record = recordPtr.get();
+  parseHelloRetryRequestKeyShare(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid key share extension (HRR)", AlertDescription::decode_error);
+  }
+
+  HelloRetryRequestKeyShare share{
+    NamedGroup(record->selected_group)};
   return share;
 }
 

@@ -258,6 +258,42 @@ is
      with
        Convention => C;
 
+   type Key_Share_Entry_Record is
+      record
+         Group  : Uint16_T;
+         Length : Uint16_T;
+         Offset : Uint32_T;
+      end record
+     with
+       Convention => C;
+
+   type Key_Share_Entry_Record_Array is array (Natural range <>) of Key_Share_Entry_Record;
+
+   type Client_Key_Share_Record is
+      record
+         Valid  : Bool;
+         Count  : Uint8_T;
+         Shares : Key_Share_Entry_Record_Array (1 .. 16);
+      end record
+     with
+       Convention => C;
+
+   type Server_Key_Share_Record is
+      record
+         Valid : Bool;
+         Share : Key_Share_Entry_Record;
+      end record
+     with
+       Convention => C;
+
+   type Hello_Retry_Request_Key_Share_Record is
+      record
+         Valid          : Bool;
+         Selected_Group : Uint16_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -273,5 +309,29 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseSupportedGroups";
+
+   procedure Parse_Client_Key_Share (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseClientKeyShare";
+
+   procedure Parse_Server_Key_Share (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseServerKeyShare";
+
+   procedure Parse_Hello_Retry_Request_Key_Share (Buffer_Address :        System.Address;
+                                                  Buffer_Length  :        Interfaces.C.Size_T;
+                                                  Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseHelloRetryRequestKeyShare";
 
 end CPP;

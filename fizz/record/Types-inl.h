@@ -659,4 +659,13 @@ std::string enumToHex(T enumValue) {
   return folly::hexlify(folly::ByteRange(
       reinterpret_cast<const uint8_t*>(&value), sizeof(value)));
 }
+
+inline Buf cloneIntoBuf(Buf const& buf, uint32_t offset, uint32_t length) {
+    folly::io::Cursor cursor(buf.get());
+    cursor.skip(offset);
+    Buf result;
+    cursor.clone(result, length);
+    return std::move(result);
+}
+
 } // namespace fizz

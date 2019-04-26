@@ -54,4 +54,43 @@ package body CPP is
       Extension_Parser.Parse_Supported_Groups (Buffer, Result);
    end Parse_Supported_Groups;
 
+   procedure Parse_Client_Key_Share (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Client_Key_Share_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Client_Key_Share (Buffer, Result);
+   end Parse_Client_Key_Share;
+
+   procedure Parse_Server_Key_Share (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Server_Key_Share_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Server_Key_Share (Buffer, Result);
+   end Parse_Server_Key_Share;
+
+   procedure Parse_Hello_Retry_Request_Key_Share (Buffer_Address :        System.Address;
+                                                  Buffer_Length  :        Interfaces.C.Size_T;
+                                                  Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Hello_Retry_Request_Key_Share_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Hello_Retry_Request_Key_Share (Buffer, Result);
+   end Parse_Hello_Retry_Request_Key_Share;
+
 end CPP;

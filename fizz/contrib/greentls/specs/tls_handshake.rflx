@@ -561,6 +561,8 @@ package TLS_Handshake is
          Shares : Key_Share_Entries;
       end message;
 
+   type Key_Share_SH is new Key_Share_Entry;
+
    type Key_Share_HRR is
       message
          Selected_Group : Named_Group;
@@ -568,7 +570,7 @@ package TLS_Handshake is
 
    for CH_Extension use (Data => Key_Share_CH)
       if Tag = EXTENSION_KEY_SHARE;
-   for SH_Extension use (Data => Key_Share_Entry)
+   for SH_Extension use (Data => Key_Share_SH)
       if Tag = EXTENSION_KEY_SHARE;
    for HRR_Extension use (Data => Key_Share_HRR)
       if Tag = EXTENSION_KEY_SHARE;

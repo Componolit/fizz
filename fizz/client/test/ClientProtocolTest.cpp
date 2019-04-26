@@ -1854,7 +1854,7 @@ TEST_F(ClientProtocolTest, TestHelloRetryRequestBadGroup) {
   hrr.extensions.push_back(encodeExtension(std::move(keyShare)));
   auto actions = detail::processEvent(state_, std::move(hrr));
   expectError<FizzException>(
-      actions, AlertDescription::handshake_failure, "unsupported group");
+      actions, AlertDescription::decode_error, "invalid key share");
 }
 
 TEST_F(ClientProtocolTest, TestHelloRetryRequestGroupAlreadySent) {
