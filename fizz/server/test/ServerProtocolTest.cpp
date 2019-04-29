@@ -2764,7 +2764,7 @@ TEST_F(ServerProtocolTest, TestClientHelloPskDhe) {
   expectActions<MutateState, WriteToSocket, SecretAvailable>(actions);
 }
 
-TEST_F(ServerProtocolTest, TestClientHelloPskModeMismatch) {
+TEST_F(ServerProtocolTest, TestClientHelloInvalidPskMode) {
   setUpExpectingClientHello();
   auto chlo = TestMessages::clientHello();
   TestMessages::removeExtension(chlo, ExtensionType::psk_key_exchange_modes);
@@ -2772,7 +2772,10 @@ TEST_F(ServerProtocolTest, TestClientHelloPskModeMismatch) {
   chlo.extensions.push_back(encodeExtension(std::move(modes)));
   TestMessages::addPsk(chlo);
   auto actions = getActions(detail::processEvent(state_, std::move(chlo)));
-  expectActions<MutateState, WriteToSocket, SecretAvailable>(actions);
+  expectError<FizzException>(
+      actions,
+      AlertDescription::decode_error,
+      "invalid psk key exchange mode");
 }
 
 TEST_F(ServerProtocolTest, TestClientHelloNoSni) {

@@ -365,6 +365,14 @@ is
      with
        Convention => C;
 
+   type PSK_Key_Exchange_Modes_Record is
+      record
+         Count : Uint8_T;
+         Modes : Uint8_T_Array (1 .. 8);
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -452,5 +460,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseSupportedVersion";
+
+   procedure Parse_PSK_Key_Exchange_Modes (Buffer_Address :        System.Address;
+                                           Buffer_Length  :        Interfaces.C.Size_T;
+                                           Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parsePskKeyExchangeModes";
 
 end CPP;

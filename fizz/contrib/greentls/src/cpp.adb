@@ -171,4 +171,17 @@ package body CPP is
       Extension_Parser.Parse_Supported_Version (Buffer, Result);
    end Parse_Supported_Version;
 
+   procedure Parse_PSK_Key_Exchange_Modes (Buffer_Address :        System.Address;
+                                           Buffer_Length  :        Interfaces.C.Size_T;
+                                           Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.PSK_Key_Exchange_Modes_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_PSK_Key_Exchange_Modes (Buffer, Result);
+   end Parse_PSK_Key_Exchange_Modes;
+
 end CPP;

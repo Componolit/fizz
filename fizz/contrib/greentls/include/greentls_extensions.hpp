@@ -79,6 +79,11 @@ struct SupportedVersionRecord {
     uint16_t version;
 };
 
+struct PskKeyExchangeModesRecord {
+    uint8_t count;
+    uint8_t modes[8];
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -94,6 +99,7 @@ extern void parseEarlyDataIndication(const uint8_t*, size_t, EarlyDataIndication
 extern void parseCookie(const uint8_t*, size_t, CookieRecord**);
 extern void parseSupportedVersions(const uint8_t*, size_t, SupportedVersionsRecord**);
 extern void parseSupportedVersion(const uint8_t*, size_t, SupportedVersionRecord**);
+extern void parsePskKeyExchangeModes(const uint8_t*, size_t, PskKeyExchangeModesRecord**);
 
 #if defined(__cplusplus)
 }

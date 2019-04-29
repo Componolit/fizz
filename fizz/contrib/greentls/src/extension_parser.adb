@@ -21,6 +21,8 @@ with RFLX.TLS_Handshake.Cookie;
 with RFLX.TLS_Handshake.Supported_Versions;
 with RFLX.TLS_Handshake.Supported_Version;
 with RFLX.TLS_Handshake.Protocol_Versions;
+with RFLX.TLS_Handshake.PSK_Key_Exchange_Modes;
+with RFLX.TLS_Handshake.Key_Exchange_Modes;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -290,6 +292,31 @@ is
       Supported_Version.Label (Buffer);
       if Supported_Version.Is_Valid (Buffer) then
          Result.Version := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Supported_Version.Get_Version (Buffer)));
+      end if;
+   end;
+
+   procedure Parse_PSK_Key_Exchange_Modes (Buffer :     RFLX.Types.Bytes;
+                                           Result : out CPP.PSK_Key_Exchange_Modes_Record)
+   is
+      First  : RFLX.Types.Length_Type;
+      Last   : RFLX.Types.Length_Type;
+      Cursor : RFLX.TLS_Handshake.Key_Exchange_Modes.Cursor_Type;
+      Index  :  RFLX.Types.Length_Type := 1;
+   begin
+      Result := (Count => 0,
+                 Modes => (others => 0));
+
+      PSK_Key_Exchange_Modes.Label (Buffer);
+      if PSK_Key_Exchange_Modes.Is_Valid (Buffer) then
+         PSK_Key_Exchange_Modes.Get_Modes (Buffer, First, Last);
+         Cursor := Key_Exchange_Modes.First (Buffer (First .. Last));
+         while Index <= Result.Modes'Last and then Key_Exchange_Modes.Valid_Element (Buffer (First .. Last), Cursor) loop
+            pragma Loop_Invariant (Index >= Result.Modes'First);
+            Result.Modes (Index) := CPP.Uint8_T (Convert_To_Key_Exchange_Mode_Base (Key_Exchange_Modes.Get_Element (Buffer (First .. Last), Cursor)));
+            Key_Exchange_Modes.Next (Buffer (First .. Last), Cursor);
+            Index := Index + 1;
+         end loop;
+         Result.Count := CPP.Uint8_T (Index - 1);
       end if;
    end;
 

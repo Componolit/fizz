@@ -38,4 +38,7 @@ is
    procedure Parse_Supported_Version (Buffer :     RFLX.Types.Bytes;
                                       Result : out CPP.Supported_Version_Record);
 
+   procedure Parse_PSK_Key_Exchange_Modes (Buffer :     RFLX.Types.Bytes;
+                                           Result : out CPP.PSK_Key_Exchange_Modes_Record);
+
 end Extension_Parser;

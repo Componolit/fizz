@@ -300,8 +300,25 @@ inline ServerSupportedVersions getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline PskKeyExchangeModes getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 256);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<PskKeyExchangeModesRecord> recordPtr(new PskKeyExchangeModesRecord());
+  PskKeyExchangeModesRecord *record = recordPtr.get();
+  parsePskKeyExchangeModes(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid psk key exchange modes extension", AlertDescription::decode_error);
+  }
+
   PskKeyExchangeModes modes;
-  detail::readVector<uint8_t>(modes.modes, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    modes.modes.push_back(
+      PskKeyExchangeMode(record->modes[i]));
+  }
   return modes;
 }
 
