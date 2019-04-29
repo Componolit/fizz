@@ -151,16 +151,53 @@ inline HelloRetryRequestKeyShare getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline ClientPresharedKey getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 4294967296);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ClientPresharedKeyRecord> recordPtr(new ClientPresharedKeyRecord());
+  ClientPresharedKeyRecord *record = recordPtr.get();
+  parseClientPresharedKey(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid pre-shared key extension (CH)", AlertDescription::decode_error);
+  }
+
   ClientPresharedKey share;
-  detail::readVector<uint16_t>(share.identities, cs);
-  detail::readVector<uint16_t>(share.binders, cs);
+  for (size_t i = 0; i < record->identity_count; i++) {
+    share.identities.push_back(
+      PskIdentity{
+        cloneIntoBuf(buf, record->identities[i].identity_offset, record->identities[i].identity_length),
+        record->identities[i].obfuscated_ticket_age});
+  }
+  for (size_t i = 0; i < record->binder_count; i++) {
+    share.binders.push_back(
+      PskBinder{
+        cloneIntoBuf(buf, record->binders[i].binder_offset, record->binders[i].binder_length)});
+  }
   return share;
 }
 
 template <>
 inline ServerPresharedKey getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 4);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ServerPresharedKeyRecord> recordPtr(new ServerPresharedKeyRecord());
+  ServerPresharedKeyRecord *record = recordPtr.get();
+  parseServerPresharedKey(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid pre-shared key extension (SH)", AlertDescription::decode_error);
+  }
+
   ServerPresharedKey share;
-  detail::read(share.selected_identity, cs);
+  share.selected_identity = record->selected_identity;
   return share;
 }
 

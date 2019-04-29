@@ -294,6 +294,46 @@ is
      with
        Convention => C;
 
+   type PSK_Identity_Record is
+      record
+         Identity_Length       : Uint16_T;
+         Identity_Offset       : Uint32_T;
+         Obfuscated_Ticket_Age : Uint32_T;
+      end record
+     with
+       Convention => C;
+
+   type PSK_Identity_Record_Array is array (Natural range <>) of PSK_Identity_Record;
+
+   type PSK_Binder_Entry_Record is
+      record
+         Binder_Length : Uint16_T;
+         Binder_Offset : Uint32_T;
+      end record
+     with
+       Convention => C;
+
+   type PSK_Binder_Entry_Record_Array is array (Natural range <>) of PSK_Binder_Entry_Record;
+
+   type Client_Preshared_Key_Record is
+      record
+         Valid          : Bool;
+         Identity_Count : Uint8_T;
+         Identities     : PSK_Identity_Record_Array (1 .. 16);
+         Binder_Count   : Uint8_T;
+         Binders        : PSK_Binder_Entry_Record_Array (1 .. 16);
+      end record
+     with
+       Convention => C;
+
+   type Server_Preshared_Key_Record is
+      record
+         Valid             : Bool;
+         Selected_Identity : Uint16_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -333,5 +373,21 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseHelloRetryRequestKeyShare";
+
+   procedure Parse_Client_Preshared_Key (Buffer_Address :        System.Address;
+                                         Buffer_Length  :        Interfaces.C.Size_T;
+                                         Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseClientPresharedKey";
+
+   procedure Parse_Server_Preshared_Key (Buffer_Address :        System.Address;
+                                         Buffer_Length  :        Interfaces.C.Size_T;
+                                         Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseServerPresharedKey";
 
 end CPP;

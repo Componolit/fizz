@@ -20,4 +20,10 @@ is
    procedure Parse_Hello_Retry_Request_Key_Share (Buffer :     RFLX.Types.Bytes;
                                                   Result : out CPP.Hello_Retry_Request_Key_Share_Record);
 
+   procedure Parse_Client_Preshared_Key (Buffer :     RFLX.Types.Bytes;
+                                         Result : out CPP.Client_Preshared_Key_Record);
+
+   procedure Parse_Server_Preshared_Key (Buffer :     RFLX.Types.Bytes;
+                                         Result : out CPP.Server_Preshared_Key_Record);
+
 end Extension_Parser;

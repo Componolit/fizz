@@ -626,7 +626,7 @@ package TLS_Handshake is
 
    type PSK_Identities is array of PSK_Identity;
 
-   type PSK_Binder_Entry_Length_Type is range 32 .. 255 with Size => 8;
+   type PSK_Binder_Entry_Length_Type is range 1 .. 255 with Size => 8;  -- FIXME: minimum changed for Fizz (standard: 32)
 
    type PSK_Binder_Entry is
       message
@@ -638,8 +638,8 @@ package TLS_Handshake is
 
    type PSK_Binder_Entries is array of PSK_Binder_Entry;
 
-   type Identities_Length_Type is range 7 .. 2**16 - 1 with Size => 16;
-   type Binders_Length_Type is range 33 .. 2**16 - 1 with Size => 16;
+   type Identities_Length_Type is range 5 .. 2**16 - 1 with Size => 16;  -- FIXME: minimum changed for Fizz (standard: 7)
+   type Binders_Length_Type is range 2 .. 2**16 - 1 with Size => 16;  -- FIXME: minimum changed for Fizz (standard: 33)
 
    type Pre_Shared_Key_CH is
       message

@@ -10,6 +10,12 @@ with RFLX.TLS_Handshake.Key_Share_SH;
 with RFLX.TLS_Handshake.Key_Share_HRR;
 with RFLX.TLS_Handshake.Key_Share_Entry;
 with RFLX.TLS_Handshake.Key_Share_Entries;
+with RFLX.TLS_Handshake.Pre_Shared_Key_CH;
+with RFLX.TLS_Handshake.Pre_Shared_Key_SH;
+with RFLX.TLS_Handshake.PSK_Identity;
+with RFLX.TLS_Handshake.PSK_Identities;
+with RFLX.TLS_Handshake.PSK_Binder_Entry;
+with RFLX.TLS_Handshake.PSK_Binder_Entries;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -132,6 +138,88 @@ is
       if Key_Share_HRR.Is_Valid (Buffer) then
          Result := (Valid => CPP.Bool (True),
                     Selected_Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Key_Share_HRR.Get_Selected_Group (Buffer))));
+      end if;
+   end;
+
+   procedure Parse_Client_Preshared_Key (Buffer :     RFLX.Types.Bytes;
+                                         Result : out CPP.Client_Preshared_Key_Record)
+   is
+      First           : RFLX.Types.Length_Type;
+      Last            : RFLX.Types.Length_Type;
+      Identity_Cursor : RFLX.TLS_Handshake.PSK_Identities.Cursor_Type;
+      Identity_Index  : Natural := 1;
+      Binder_Cursor   : RFLX.TLS_Handshake.PSK_Binder_Entries.Cursor_Type;
+      Binder_Index    : Natural := 1;
+   begin
+      Result := (Valid => CPP.Bool (False),
+                 Identity_Count => 0,
+                 Identities => (others => (0, 0, 0)),
+                 Binder_Count => 0,
+                 Binders => (others => (0, 0)));
+
+      Pre_Shared_Key_CH.Label (Buffer);
+      if Pre_Shared_Key_CH.Is_Valid (Buffer) then
+         Pre_Shared_Key_CH.Get_Identities (Buffer, First, Last);
+         Identity_Cursor := PSK_Identities.First (Buffer (First .. Last));
+         pragma Assert (Identity_Cursor.First >= First);
+         pragma Assert (Identity_Cursor.Last <= Last);
+         pragma Assert (PSK_Identity.Is_Contained (Buffer (Identity_Cursor.First .. Identity_Cursor.Last)));
+         while Identity_Index <= Result.Identities'Last and then PSK_Identities.Valid_Element (Buffer (First .. Last), Identity_Cursor) loop
+            declare
+               Cf : constant RFLX.Types.Index_Type := Identity_Cursor.First;
+               Cl : constant RFLX.Types.Index_Type := Identity_Cursor.Last;
+            begin
+               pragma Loop_Invariant (Identity_Index >= Result.Identities'First);
+               pragma Loop_Invariant (Identity_Index <= Result.Identities'Last);
+               pragma Loop_Invariant (Cf = Identity_Cursor.First and then Cl = Identity_Cursor.Last);
+               pragma Loop_Invariant (Cf >= First and then Cl <= Last);
+               pragma Loop_Invariant (PSK_Identity.Is_Contained (Buffer (Cf .. Cl)));
+               pragma Loop_Invariant (PSK_Identity.Is_Valid (Buffer (Cf .. Cl)));
+            end;
+            Result.Identities (Identity_Index) := (Identity_Length => CPP.Uint16_T (PSK_Identity.Get_Length (Buffer (Identity_Cursor.First .. Identity_Cursor.Last))),
+                                                   Identity_Offset => CPP.Uint32_T (PSK_Identity.Get_Identity_First (Buffer (Identity_Cursor.First .. Identity_Cursor.Last)) - 1),
+                                                   Obfuscated_Ticket_Age => CPP.Uint32_T (PSK_Identity.Get_Obfuscated_Ticket_Age (Buffer (Identity_Cursor.First .. Identity_Cursor.Last))));
+            PSK_Identities.Next (Buffer (First .. Last), Identity_Cursor);
+            Identity_Index := Identity_Index + 1;
+         end loop;
+         Result.Identity_Count := CPP.Uint8_T (Identity_Index - 1);
+
+         Pre_Shared_Key_CH.Get_Binders (Buffer, First, Last);
+         Binder_Cursor := PSK_Binder_Entries.First (Buffer (First .. Last));
+         while Binder_Index <= Result.Binders'Last and then PSK_Binder_Entries.Valid_Element (Buffer (First .. Last), Binder_Cursor) loop
+            declare
+               Cf : constant RFLX.Types.Index_Type := Binder_Cursor.First;
+               Cl : constant RFLX.Types.Index_Type := Binder_Cursor.Last;
+            begin
+               pragma Loop_Invariant (Binder_Index >= Result.Binders'First);
+               pragma Loop_Invariant (Binder_Index <= Result.Binders'Last);
+               pragma Loop_Invariant (Cf = Binder_Cursor.First and then Cl = Binder_Cursor.Last);
+               pragma Loop_Invariant (Cf >= First and then Cl <= Last);
+               pragma Loop_Invariant (PSK_Binder_Entry.Is_Contained (Buffer (Cf .. Cl)));
+               pragma Loop_Invariant (PSK_Binder_Entry.Is_Valid (Buffer (Cf .. Cl)));
+            end;
+            Result.Binders (Binder_Index) := (Binder_Length => CPP.Uint16_T (PSK_Binder_Entry.Get_Length (Buffer (Binder_Cursor.First .. Binder_Cursor.Last))),
+                                              Binder_Offset => CPP.Uint32_T (PSK_Binder_Entry.Get_PSK_Binder_Entry_First (Buffer (Binder_Cursor.First .. Binder_Cursor.Last)) - 1));
+            PSK_Binder_Entries.Next (Buffer (First .. Last), Binder_Cursor);
+            Binder_Index := Binder_Index + 1;
+         end loop;
+         Result.Binder_Count := CPP.Uint8_T (Binder_Index - 1);
+
+         Result.Valid := CPP.Bool (True);
+      end if;
+   end;
+
+   procedure Parse_Server_Preshared_Key (Buffer :     RFLX.Types.Bytes;
+                                         Result : out CPP.Server_Preshared_Key_Record)
+   is
+   begin
+      Result := (Valid => CPP.Bool (False),
+                 Selected_Identity => 0);
+
+      Pre_Shared_Key_SH.Label (Buffer);
+      if Pre_Shared_Key_SH.Is_Valid (Buffer) then
+         Result := (Valid => CPP.Bool (True),
+                    Selected_Identity => CPP.Uint16_T (Pre_Shared_Key_SH.Get_Selected_Identity (Buffer)));
       end if;
    end;
 

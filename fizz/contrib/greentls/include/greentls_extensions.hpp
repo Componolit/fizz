@@ -36,6 +36,30 @@ struct HelloRetryRequestKeyShareRecord {
     uint16_t selected_group;
 };
 
+struct PskIdentityRecord {
+    uint16_t identity_length;
+    uint32_t identity_offset;
+    uint32_t obfuscated_ticket_age;
+};
+
+struct PskBinderEntryRecord {
+    uint16_t binder_length;
+    uint32_t binder_offset;
+};
+
+struct ClientPresharedKeyRecord {
+    bool valid;
+    uint8_t identity_count;
+    PskIdentityRecord identities[16];
+    uint8_t binder_count;
+    PskBinderEntryRecord binders[16];
+};
+
+struct ServerPresharedKeyRecord {
+    bool valid;
+    uint16_t selected_identity;
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -45,6 +69,8 @@ extern void parseSupportedGroups(const uint8_t*, size_t, SupportedGroupsRecord**
 extern void parseClientKeyShare(const uint8_t*, size_t, ClientKeyShareRecord**);
 extern void parseServerKeyShare(const uint8_t*, size_t, ServerKeyShareRecord**);
 extern void parseHelloRetryRequestKeyShare(const uint8_t*, size_t, HelloRetryRequestKeyShareRecord**);
+extern void parseClientPresharedKey(const uint8_t*, size_t, ClientPresharedKeyRecord**);
+extern void parseServerPresharedKey(const uint8_t*, size_t, ServerPresharedKeyRecord**);
 
 #if defined(__cplusplus)
 }
