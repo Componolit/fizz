@@ -70,6 +70,15 @@ struct CookieRecord {
     uint32_t offset;
 };
 
+struct SupportedVersionsRecord {
+    uint8_t count;
+    uint16_t versions[16];
+};
+
+struct SupportedVersionRecord {
+    uint16_t version;
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -83,6 +92,8 @@ extern void parseClientPresharedKey(const uint8_t*, size_t, ClientPresharedKeyRe
 extern void parseServerPresharedKey(const uint8_t*, size_t, ServerPresharedKeyRecord**);
 extern void parseEarlyDataIndication(const uint8_t*, size_t, EarlyDataIndicationRecord**);
 extern void parseCookie(const uint8_t*, size_t, CookieRecord**);
+extern void parseSupportedVersions(const uint8_t*, size_t, SupportedVersionsRecord**);
+extern void parseSupportedVersion(const uint8_t*, size_t, SupportedVersionRecord**);
 
 #if defined(__cplusplus)
 }

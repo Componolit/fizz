@@ -32,4 +32,10 @@ is
    procedure Parse_Cookie (Buffer :     RFLX.Types.Bytes;
                            Result : out CPP.Cookie_Record);
 
+   procedure Parse_Supported_Versions (Buffer :     RFLX.Types.Bytes;
+                                       Result : out CPP.Supported_Versions_Record);
+
+   procedure Parse_Supported_Version (Buffer :     RFLX.Types.Bytes;
+                                      Result : out CPP.Supported_Version_Record);
+
 end Extension_Parser;

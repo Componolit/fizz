@@ -2866,12 +2866,28 @@ TEST_F(ServerProtocolTest, TestClientHelloNoSupportedVersions) {
       "supported version mismatch");
 }
 
-TEST_F(ServerProtocolTest, TestClientHelloSupportedVersionsMismatch) {
+TEST_F(ServerProtocolTest, TestClientHelloInvalidSupportedVersions) {
   setUpExpectingClientHello();
   auto clientHello = TestMessages::clientHello();
   TestMessages::removeExtension(clientHello, ExtensionType::supported_versions);
   SupportedVersions supportedVersions;
   supportedVersions.versions.push_back(static_cast<ProtocolVersion>(0x0200));
+  clientHello.extensions.push_back(
+      encodeExtension(std::move(supportedVersions)));
+  auto actions =
+      getActions(detail::processEvent(state_, std::move(clientHello)));
+  expectError<FizzException>(
+      actions,
+      AlertDescription::decode_error,
+      "invalid supported version");
+}
+
+TEST_F(ServerProtocolTest, TestClientHelloSupportedVersionsMismatch) {
+  setUpExpectingClientHello();
+  auto clientHello = TestMessages::clientHello();
+  TestMessages::removeExtension(clientHello, ExtensionType::supported_versions);
+  SupportedVersions supportedVersions;
+  supportedVersions.versions.push_back(ProtocolVersion::tls_1_0);
   clientHello.extensions.push_back(
       encodeExtension(std::move(supportedVersions)));
   auto actions =

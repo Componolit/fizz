@@ -350,6 +350,21 @@ is
      with
        Convention => C;
 
+   type Supported_Versions_Record is
+      record
+         Count    : Uint8_T;
+         Versions : Uint16_T_Array (1 .. 16);
+      end record
+     with
+       Convention => C;
+
+   type Supported_Version_Record is
+      record
+         Version : Uint16_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -421,5 +436,21 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseCookie";
+
+   procedure Parse_Supported_Versions (Buffer_Address :        System.Address;
+                                       Buffer_Length  :        Interfaces.C.Size_T;
+                                       Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseSupportedVersions";
+
+   procedure Parse_Supported_Version (Buffer_Address :        System.Address;
+                                      Buffer_Length  :        Interfaces.C.Size_T;
+                                      Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseSupportedVersion";
 
 end CPP;

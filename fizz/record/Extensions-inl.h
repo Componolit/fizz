@@ -255,15 +255,46 @@ inline Cookie getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline SupportedVersions getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 256);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<SupportedVersionsRecord> recordPtr(new SupportedVersionsRecord());
+  SupportedVersionsRecord *record = recordPtr.get();
+  parseSupportedVersions(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid supported versions extension (CH)", AlertDescription::decode_error);
+  }
+
   SupportedVersions versions;
-  detail::readVector<uint8_t>(versions.versions, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    versions.versions.push_back(
+      ProtocolVersion(record->versions[i]));
+  }
   return versions;
 }
 
 template <>
 inline ServerSupportedVersions getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 4);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<SupportedVersionRecord> recordPtr(new SupportedVersionRecord());
+  SupportedVersionRecord *record = recordPtr.get();
+  parseSupportedVersion(buf->data(), buf->length(), &record);
+
+  if (record->version == 0) {
+    throw FizzException("invalid supported versions extension (SH)", AlertDescription::decode_error);
+  }
+
   ServerSupportedVersions versions;
-  detail::read(versions.selected_version, cs);
+  versions.selected_version = ProtocolVersion(record->version);
   return versions;
 }
 

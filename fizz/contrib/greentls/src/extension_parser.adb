@@ -18,6 +18,9 @@ with RFLX.TLS_Handshake.PSK_Binder_Entry;
 with RFLX.TLS_Handshake.PSK_Binder_Entries;
 with RFLX.TLS_Handshake.Early_Data_Indication;
 with RFLX.TLS_Handshake.Cookie;
+with RFLX.TLS_Handshake.Supported_Versions;
+with RFLX.TLS_Handshake.Supported_Version;
+with RFLX.TLS_Handshake.Protocol_Versions;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -250,6 +253,43 @@ is
       if Cookie.Is_Valid (Buffer) then
          Result := (Length => CPP.Uint16_T (Cookie.Get_Length (Buffer)),
                     Offset => CPP.Uint32_T (Cookie.Get_Cookie_First (Buffer) - 1));
+      end if;
+   end;
+
+   procedure Parse_Supported_Versions (Buffer :     RFLX.Types.Bytes;
+                                       Result : out CPP.Supported_Versions_Record)
+   is
+      First  : RFLX.Types.Length_Type;
+      Last   : RFLX.Types.Length_Type;
+      Cursor : RFLX.TLS_Handshake.Protocol_Versions.Cursor_Type;
+      Index  : Natural := 1;
+   begin
+      Result := (Count => 0,
+                 Versions => (others => 0));
+
+      Supported_Versions.Label (Buffer);
+      if Supported_Versions.Is_Valid (Buffer) then
+         Supported_Versions.Get_Versions (Buffer, First, Last);
+         Cursor := Protocol_Versions.First (Buffer (First .. Last));
+         while Index <= Result.Versions'Last and then Protocol_Versions.Valid_Element (Buffer (First .. Last), Cursor) loop
+            pragma Loop_Invariant (Index >= Result.Versions'First);
+            Result.Versions (Index) := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Protocol_Versions.Get_Element (Buffer (First .. Last), Cursor)));
+            Protocol_Versions.Next (Buffer (First .. Last), Cursor);
+            Index := Index + 1;
+         end loop;
+         Result.Count := CPP.Uint8_T (Index - 1);
+      end if;
+   end;
+
+   procedure Parse_Supported_Version (Buffer :     RFLX.Types.Bytes;
+                                      Result : out CPP.Supported_Version_Record)
+   is
+   begin
+      Result := (Version => 0);
+
+      Supported_Version.Label (Buffer);
+      if Supported_Version.Is_Valid (Buffer) then
+         Result.Version := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Supported_Version.Get_Version (Buffer)));
       end if;
    end;
 

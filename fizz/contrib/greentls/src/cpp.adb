@@ -145,4 +145,30 @@ package body CPP is
       Extension_Parser.Parse_Cookie (Buffer, Result);
    end Parse_Cookie;
 
+   procedure Parse_Supported_Versions (Buffer_Address :        System.Address;
+                                       Buffer_Length  :        Interfaces.C.Size_T;
+                                       Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Supported_Versions_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Supported_Versions (Buffer, Result);
+   end Parse_Supported_Versions;
+
+   procedure Parse_Supported_Version (Buffer_Address :        System.Address;
+                                      Buffer_Length  :        Interfaces.C.Size_T;
+                                      Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Supported_Version_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Supported_Version (Buffer, Result);
+   end Parse_Supported_Version;
+
 end CPP;
