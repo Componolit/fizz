@@ -26,4 +26,7 @@ is
    procedure Parse_Server_Preshared_Key (Buffer :     RFLX.Types.Bytes;
                                          Result : out CPP.Server_Preshared_Key_Record);
 
+   procedure Parse_Early_Data_Indication (Buffer :     RFLX.Types.Bytes;
+                                          Result : out CPP.Early_Data_Indication_Record);
+
 end Extension_Parser;

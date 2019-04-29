@@ -16,6 +16,7 @@ with RFLX.TLS_Handshake.PSK_Identity;
 with RFLX.TLS_Handshake.PSK_Identities;
 with RFLX.TLS_Handshake.PSK_Binder_Entry;
 with RFLX.TLS_Handshake.PSK_Binder_Entries;
+with RFLX.TLS_Handshake.Early_Data_Indication;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -220,6 +221,20 @@ is
       if Pre_Shared_Key_SH.Is_Valid (Buffer) then
          Result := (Valid => CPP.Bool (True),
                     Selected_Identity => CPP.Uint16_T (Pre_Shared_Key_SH.Get_Selected_Identity (Buffer)));
+      end if;
+   end;
+
+   procedure Parse_Early_Data_Indication (Buffer :     RFLX.Types.Bytes;
+                                          Result : out CPP.Early_Data_Indication_Record)
+   is
+   begin
+      Result := (Valid => CPP.Bool (False),
+                 Max_Early_Data_Size => 0);
+
+      Early_Data_Indication.Label (Buffer);
+      if Early_Data_Indication.Is_Valid (Buffer) then
+         Result := (Valid => CPP.Bool (True),
+                    Max_Early_Data_Size => CPP.Uint32_T (Early_Data_Indication.Get_Max_Early_Data_Size (Buffer)));
       end if;
    end;
 

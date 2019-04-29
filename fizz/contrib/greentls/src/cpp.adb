@@ -119,4 +119,17 @@ package body CPP is
       Extension_Parser.Parse_Server_Preshared_Key (Buffer, Result);
    end Parse_Server_Preshared_Key;
 
+   procedure Parse_Early_Data_Indication (Buffer_Address :        System.Address;
+                                         Buffer_Length  :        Interfaces.C.Size_T;
+                                         Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Early_Data_Indication_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Early_Data_Indication (Buffer, Result);
+   end Parse_Early_Data_Indication;
+
 end CPP;

@@ -334,6 +334,14 @@ is
      with
        Convention => C;
 
+   type Early_Data_Indication_Record is
+      record
+         Valid               : Bool;
+         Max_Early_Data_Size : Uint32_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -389,5 +397,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseServerPresharedKey";
+
+   procedure Parse_Early_Data_Indication (Buffer_Address :        System.Address;
+                                         Buffer_Length  :        Interfaces.C.Size_T;
+                                         Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseEarlyDataIndication";
 
 end CPP;

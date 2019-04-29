@@ -60,6 +60,11 @@ struct ServerPresharedKeyRecord {
     uint16_t selected_identity;
 };
 
+struct EarlyDataIndicationRecord {
+    bool valid;
+    uint32_t max_early_data_size;
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -71,6 +76,7 @@ extern void parseServerKeyShare(const uint8_t*, size_t, ServerKeyShareRecord**);
 extern void parseHelloRetryRequestKeyShare(const uint8_t*, size_t, HelloRetryRequestKeyShareRecord**);
 extern void parseClientPresharedKey(const uint8_t*, size_t, ClientPresharedKeyRecord**);
 extern void parseServerPresharedKey(const uint8_t*, size_t, ServerPresharedKeyRecord**);
+extern void parseEarlyDataIndication(const uint8_t*, size_t, EarlyDataIndicationRecord**);
 
 #if defined(__cplusplus)
 }

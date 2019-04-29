@@ -213,8 +213,22 @@ inline ServerEarlyData getExtension(folly::io::Cursor& /* unused */) {
 
 template <>
 inline TicketEarlyData getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 4);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<EarlyDataIndicationRecord> recordPtr(new EarlyDataIndicationRecord());
+  EarlyDataIndicationRecord *record = recordPtr.get();
+  parseEarlyDataIndication(buf->data(), buf->length(), &record);
+
+  if (!record->valid) {
+    throw FizzException("invalid early data extension", AlertDescription::decode_error);
+  }
+
   TicketEarlyData early;
-  detail::read(early.max_early_data_size, cs);
+  early.max_early_data_size = record->max_early_data_size;
   return early;
 }
 
