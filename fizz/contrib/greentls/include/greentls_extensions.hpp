@@ -65,6 +65,11 @@ struct EarlyDataIndicationRecord {
     uint32_t max_early_data_size;
 };
 
+struct CookieRecord {
+    uint16_t length;
+    uint32_t offset;
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -77,6 +82,7 @@ extern void parseHelloRetryRequestKeyShare(const uint8_t*, size_t, HelloRetryReq
 extern void parseClientPresharedKey(const uint8_t*, size_t, ClientPresharedKeyRecord**);
 extern void parseServerPresharedKey(const uint8_t*, size_t, ServerPresharedKeyRecord**);
 extern void parseEarlyDataIndication(const uint8_t*, size_t, EarlyDataIndicationRecord**);
+extern void parseCookie(const uint8_t*, size_t, CookieRecord**);
 
 #if defined(__cplusplus)
 }

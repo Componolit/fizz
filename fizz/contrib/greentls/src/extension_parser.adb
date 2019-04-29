@@ -17,6 +17,7 @@ with RFLX.TLS_Handshake.PSK_Identities;
 with RFLX.TLS_Handshake.PSK_Binder_Entry;
 with RFLX.TLS_Handshake.PSK_Binder_Entries;
 with RFLX.TLS_Handshake.Early_Data_Indication;
+with RFLX.TLS_Handshake.Cookie;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -235,6 +236,20 @@ is
       if Early_Data_Indication.Is_Valid (Buffer) then
          Result := (Valid => CPP.Bool (True),
                     Max_Early_Data_Size => CPP.Uint32_T (Early_Data_Indication.Get_Max_Early_Data_Size (Buffer)));
+      end if;
+   end;
+
+   procedure Parse_Cookie (Buffer :     RFLX.Types.Bytes;
+                                         Result : out CPP.Cookie_Record)
+   is
+   begin
+      Result := (Length => 0,
+                 Offset => 0);
+
+      Cookie.Label (Buffer);
+      if Cookie.Is_Valid (Buffer) then
+         Result := (Length => CPP.Uint16_T (Cookie.Get_Length (Buffer)),
+                    Offset => CPP.Uint32_T (Cookie.Get_Cookie_First (Buffer) - 1));
       end if;
    end;
 

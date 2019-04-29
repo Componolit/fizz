@@ -234,8 +234,22 @@ inline TicketEarlyData getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline Cookie getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<CookieRecord> recordPtr(new CookieRecord());
+  CookieRecord *record = recordPtr.get();
+  parseCookie(buf->data(), buf->length(), &record);
+
+  if (record->offset == 0 && record->length == 0) {
+    throw FizzException("invalid cookie extension", AlertDescription::decode_error);
+  }
+
   Cookie cookie;
-  detail::readBuf<uint16_t>(cookie.cookie, cs);
+  cookie.cookie = cloneIntoBuf(buf, record->offset, record->length);
   return cookie;
 }
 

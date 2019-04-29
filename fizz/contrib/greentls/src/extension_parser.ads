@@ -29,4 +29,7 @@ is
    procedure Parse_Early_Data_Indication (Buffer :     RFLX.Types.Bytes;
                                           Result : out CPP.Early_Data_Indication_Record);
 
+   procedure Parse_Cookie (Buffer :     RFLX.Types.Bytes;
+                           Result : out CPP.Cookie_Record);
+
 end Extension_Parser;

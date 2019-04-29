@@ -342,6 +342,14 @@ is
      with
        Convention => C;
 
+   type Cookie_Record is
+      record
+         Length : Uint16_T;
+         Offset : Uint32_T;
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -405,5 +413,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseEarlyDataIndication";
+
+   procedure Parse_Cookie (Buffer_Address :        System.Address;
+                           Buffer_Length  :        Interfaces.C.Size_T;
+                           Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseCookie";
 
 end CPP;
