@@ -41,4 +41,7 @@ is
    procedure Parse_PSK_Key_Exchange_Modes (Buffer :     RFLX.Types.Bytes;
                                            Result : out CPP.PSK_Key_Exchange_Modes_Record);
 
+   procedure Parse_Protocol_Name_List (Buffer :     RFLX.Types.Bytes;
+                                       Result : out CPP.Protocol_Name_List_Record);
+
 end Extension_Parser;

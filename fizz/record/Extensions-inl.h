@@ -324,8 +324,26 @@ inline PskKeyExchangeModes getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline ProtocolNameList getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ProtocolNameListRecord> recordPtr(new ProtocolNameListRecord());
+  ProtocolNameListRecord *record = recordPtr.get();
+  parseProtocolNameList(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid alpn extension", AlertDescription::decode_error);
+  }
+
   ProtocolNameList names;
-  detail::readVector<uint16_t>(names.protocol_name_list, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    names.protocol_name_list.push_back(
+      ProtocolName{
+        cloneIntoBuf(buf, record->protocol_names[i].offset, record->protocol_names[i].length)});
+  }
   return names;
 }
 

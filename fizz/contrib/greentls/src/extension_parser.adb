@@ -23,6 +23,9 @@ with RFLX.TLS_Handshake.Supported_Version;
 with RFLX.TLS_Handshake.Protocol_Versions;
 with RFLX.TLS_Handshake.PSK_Key_Exchange_Modes;
 with RFLX.TLS_Handshake.Key_Exchange_Modes;
+with RFLX.TLS_Handshake.Protocol_Name_List;
+with RFLX.TLS_Handshake.Protocol_Names;
+with RFLX.TLS_Handshake.Protocol_Name;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -317,6 +320,43 @@ is
             Index := Index + 1;
          end loop;
          Result.Count := CPP.Uint8_T (Index - 1);
+      end if;
+   end;
+
+   procedure Parse_Protocol_Name_List (Buffer :     RFLX.Types.Bytes;
+                                       Result : out CPP.Protocol_Name_List_Record)
+   is
+      First  : RFLX.Types.Length_Type;
+      Last   : RFLX.Types.Length_Type;
+      Cursor : RFLX.TLS_Handshake.Protocol_Names.Cursor_Type;
+      Index  : Natural := 1;
+   begin
+      Result := (Count => 0,
+                 Protocol_Names => (others => (0, 0)));
+
+      Protocol_Name_List.Label (Buffer);
+      if Protocol_Name_List.Is_Valid (Buffer) then
+         Protocol_Name_List.Get_Protocol_Name_List (Buffer, First, Last);
+         Cursor := Protocol_Names.First (Buffer (First .. Last));
+         while Index <= Result.Protocol_Names'Last and then Protocol_Names.Valid_Element (Buffer (First .. Last), Cursor) loop
+            declare
+               Cf : constant RFLX.Types.Index_Type := Cursor.First;
+               Cl : constant RFLX.Types.Index_Type := Cursor.Last;
+            begin
+               pragma Loop_Invariant (Index >= Result.Protocol_Names'First);
+               pragma Loop_Invariant (Index <= Result.Protocol_Names'Last);
+               pragma Loop_Invariant (Cf = Cursor.First and then Cl = Cursor.Last);
+               pragma Loop_Invariant (Cf >= First and then Cl <= Last);
+               pragma Loop_Invariant (Protocol_Name.Is_Contained (Buffer (Cf .. Cl)));
+               pragma Loop_Invariant (Protocol_Name.Is_Valid (Buffer (Cf .. Cl)));
+            end;
+
+            Result.Protocol_Names (Index) := (Length => CPP.Uint16_T (Protocol_Name.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
+                                              Offset => CPP.Uint32_T (Protocol_Name.Get_Name_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
+            Protocol_Names.Next (Buffer (First .. Last), Cursor);
+            Index := Index + 1;
+         end loop;
+         Result.Count := RFLX.Types.Byte (Index - 1);
       end if;
    end;
 

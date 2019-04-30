@@ -84,6 +84,16 @@ struct PskKeyExchangeModesRecord {
     uint8_t modes[8];
 };
 
+struct ProtocolNameRecord {
+    uint16_t length;
+    uint32_t offset;
+};
+
+struct ProtocolNameListRecord {
+    uint8_t count;
+    ProtocolNameRecord protocol_names[8];
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -100,6 +110,7 @@ extern void parseCookie(const uint8_t*, size_t, CookieRecord**);
 extern void parseSupportedVersions(const uint8_t*, size_t, SupportedVersionsRecord**);
 extern void parseSupportedVersion(const uint8_t*, size_t, SupportedVersionRecord**);
 extern void parsePskKeyExchangeModes(const uint8_t*, size_t, PskKeyExchangeModesRecord**);
+extern void parseProtocolNameList(const uint8_t*, size_t, ProtocolNameListRecord**);
 
 #if defined(__cplusplus)
 }

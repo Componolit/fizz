@@ -184,4 +184,17 @@ package body CPP is
       Extension_Parser.Parse_PSK_Key_Exchange_Modes (Buffer, Result);
    end Parse_PSK_Key_Exchange_Modes;
 
+   procedure Parse_Protocol_Name_List (Buffer_Address :        System.Address;
+                                       Buffer_Length  :        Interfaces.C.Size_T;
+                                       Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Protocol_Name_List_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Protocol_Name_List (Buffer, Result);
+   end Parse_Protocol_Name_List;
+
 end CPP;

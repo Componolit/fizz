@@ -1977,7 +1977,7 @@ TEST_F(ClientProtocolTest, TestEncryptedExtensionsEmptyAlpn) {
   ee.extensions.push_back(encodeExtension(ProtocolNameList()));
   auto actions = detail::processEvent(state_, std::move(ee));
   expectError<FizzException>(
-      actions, AlertDescription::illegal_parameter, "alpn list");
+      actions, AlertDescription::decode_error, "invalid alpn");
 }
 
 TEST_F(ClientProtocolTest, TestEncryptedExtensionsAlpnMismatch) {
