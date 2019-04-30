@@ -47,4 +47,7 @@ is
    procedure Parse_Server_Name_List (Buffer :     RFLX.Types.Bytes;
                                      Result : out CPP.Server_Name_List_Record);
 
+   procedure Parse_Certificate_Authorities (Buffer :     RFLX.Types.Bytes;
+                                            Result : out CPP.Certificate_Authorities_Record);
+
 end Extension_Parser;

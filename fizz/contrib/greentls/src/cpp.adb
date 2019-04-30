@@ -210,4 +210,17 @@ package body CPP is
       Extension_Parser.Parse_Server_Name_List (Buffer, Result);
    end Parse_Server_Name_List;
 
+   procedure Parse_Certificate_Authorities (Buffer_Address :        System.Address;
+                                            Buffer_Length  :        Interfaces.C.Size_T;
+                                            Result_Address : in out System.Address)
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+      Result : CPP.Certificate_Authorities_Record with
+        Address => Result_Address;
+   begin
+      Extension_Parser.Parse_Certificate_Authorities (Buffer, Result);
+   end Parse_Certificate_Authorities;
+
 end CPP;

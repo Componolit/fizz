@@ -29,6 +29,9 @@ with RFLX.TLS_Handshake.Protocol_Name;
 with RFLX.TLS_Handshake.Server_Name_List;
 with RFLX.TLS_Handshake.Server_Names;
 with RFLX.TLS_Handshake.Server_Name;
+with RFLX.TLS_Handshake.Certificate_Authorities;
+with RFLX.TLS_Handshake.Distinguished_Names;
+with RFLX.TLS_Handshake.Distinguished_Name;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -394,6 +397,43 @@ is
             Result.Server_Names (Index) := (Length => CPP.Uint16_T (Server_Name.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
                                             Offset => CPP.Uint32_T (Server_Name.Get_Name_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
             Server_Names.Next (Buffer (First .. Last), Cursor);
+            Index := Index + 1;
+         end loop;
+         Result.Count := RFLX.Types.Byte (Index - 1);
+      end if;
+   end;
+
+   procedure Parse_Certificate_Authorities (Buffer :     RFLX.Types.Bytes;
+                                            Result : out CPP.Certificate_Authorities_Record)
+   is
+      First  : RFLX.Types.Length_Type;
+      Last   : RFLX.Types.Length_Type;
+      Cursor : RFLX.TLS_Handshake.Distinguished_Names.Cursor_Type;
+      Index  : Natural := 1;
+   begin
+      Result := (Count => 0,
+                 Authorities => (others => (0, 0)));
+
+      Certificate_Authorities.Label (Buffer);
+      if Certificate_Authorities.Is_Valid (Buffer) then
+         Certificate_Authorities.Get_Authorities (Buffer, First, Last);
+         Cursor := Distinguished_Names.First (Buffer (First .. Last));
+         while Index <= Result.Authorities'Last and then Distinguished_Names.Valid_Element (Buffer (First .. Last), Cursor) loop
+            declare
+               Cf : constant RFLX.Types.Index_Type := Cursor.First;
+               Cl : constant RFLX.Types.Index_Type := Cursor.Last;
+            begin
+               pragma Loop_Invariant (Index >= Result.Authorities'First);
+               pragma Loop_Invariant (Index <= Result.Authorities'Last);
+               pragma Loop_Invariant (Cf = Cursor.First and then Cl = Cursor.Last);
+               pragma Loop_Invariant (Cf >= First and then Cl <= Last);
+               pragma Loop_Invariant (Distinguished_Name.Is_Contained (Buffer (Cf .. Cl)));
+               pragma Loop_Invariant (Distinguished_Name.Is_Valid (Buffer (Cf .. Cl)));
+            end;
+
+            Result.Authorities (Index) := (Length => CPP.Uint16_T (Distinguished_Name.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
+                                           Offset => CPP.Uint32_T (Distinguished_Name.Get_Name_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
+            Distinguished_Names.Next (Buffer (First .. Last), Cursor);
             Index := Index + 1;
          end loop;
          Result.Count := RFLX.Types.Byte (Index - 1);

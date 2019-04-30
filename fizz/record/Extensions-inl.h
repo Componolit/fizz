@@ -375,8 +375,26 @@ inline ServerNameList getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline CertificateAuthorities getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<CertificateAuthoritiesRecord> recordPtr(new CertificateAuthoritiesRecord());
+  CertificateAuthoritiesRecord *record = recordPtr.get();
+  parseCertificateAuthorities(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid certificate authorities extension", AlertDescription::decode_error);
+  }
+
   CertificateAuthorities authorities;
-  detail::readVector<uint16_t>(authorities.authorities, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    authorities.authorities.push_back(
+      DistinguishedName{
+        cloneIntoBuf(buf, record->authorities[i].offset, record->authorities[i].length)});
+  }
   return authorities;
 }
 
