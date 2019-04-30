@@ -26,6 +26,9 @@ with RFLX.TLS_Handshake.Key_Exchange_Modes;
 with RFLX.TLS_Handshake.Protocol_Name_List;
 with RFLX.TLS_Handshake.Protocol_Names;
 with RFLX.TLS_Handshake.Protocol_Name;
+with RFLX.TLS_Handshake.Server_Name_List;
+with RFLX.TLS_Handshake.Server_Names;
+with RFLX.TLS_Handshake.Server_Name;
 
 package body Extension_Parser with
   SPARK_Mode
@@ -354,6 +357,43 @@ is
             Result.Protocol_Names (Index) := (Length => CPP.Uint16_T (Protocol_Name.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
                                               Offset => CPP.Uint32_T (Protocol_Name.Get_Name_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
             Protocol_Names.Next (Buffer (First .. Last), Cursor);
+            Index := Index + 1;
+         end loop;
+         Result.Count := RFLX.Types.Byte (Index - 1);
+      end if;
+   end;
+
+   procedure Parse_Server_Name_List (Buffer :     RFLX.Types.Bytes;
+                                     Result : out CPP.Server_Name_List_Record)
+   is
+      First  : RFLX.Types.Length_Type;
+      Last   : RFLX.Types.Length_Type;
+      Cursor : RFLX.TLS_Handshake.Server_Names.Cursor_Type;
+      Index  : Natural := 1;
+   begin
+      Result := (Count => 0,
+                 Server_Names => (others => (0, 0)));
+
+      Server_Name_List.Label (Buffer);
+      if Server_Name_List.Is_Valid (Buffer) then
+         Server_Name_List.Get_Server_Name_List (Buffer, First, Last);
+         Cursor := Server_Names.First (Buffer (First .. Last));
+         while Index <= Result.Server_Names'Last and then Server_Names.Valid_Element (Buffer (First .. Last), Cursor) loop
+            declare
+               Cf : constant RFLX.Types.Index_Type := Cursor.First;
+               Cl : constant RFLX.Types.Index_Type := Cursor.Last;
+            begin
+               pragma Loop_Invariant (Index >= Result.Server_Names'First);
+               pragma Loop_Invariant (Index <= Result.Server_Names'Last);
+               pragma Loop_Invariant (Cf = Cursor.First and then Cl = Cursor.Last);
+               pragma Loop_Invariant (Cf >= First and then Cl <= Last);
+               pragma Loop_Invariant (Server_Name.Is_Contained (Buffer (Cf .. Cl)));
+               pragma Loop_Invariant (Server_Name.Is_Valid (Buffer (Cf .. Cl)));
+            end;
+
+            Result.Server_Names (Index) := (Length => CPP.Uint16_T (Server_Name.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
+                                            Offset => CPP.Uint32_T (Server_Name.Get_Name_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
+            Server_Names.Next (Buffer (First .. Last), Cursor);
             Index := Index + 1;
          end loop;
          Result.Count := RFLX.Types.Byte (Index - 1);

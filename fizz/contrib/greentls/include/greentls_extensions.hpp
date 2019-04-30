@@ -94,6 +94,16 @@ struct ProtocolNameListRecord {
     ProtocolNameRecord protocol_names[8];
 };
 
+struct ServerNameRecord {
+    uint16_t length;
+    uint32_t offset;
+};
+
+struct ServerNameListRecord {
+    uint8_t count;
+    ServerNameRecord server_names[8];
+};
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -111,6 +121,7 @@ extern void parseSupportedVersions(const uint8_t*, size_t, SupportedVersionsReco
 extern void parseSupportedVersion(const uint8_t*, size_t, SupportedVersionRecord**);
 extern void parsePskKeyExchangeModes(const uint8_t*, size_t, PskKeyExchangeModesRecord**);
 extern void parseProtocolNameList(const uint8_t*, size_t, ProtocolNameListRecord**);
+extern void parseServerNameList(const uint8_t*, size_t, ServerNameListRecord**);
 
 #if defined(__cplusplus)
 }

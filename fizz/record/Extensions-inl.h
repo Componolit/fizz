@@ -349,8 +349,27 @@ inline ProtocolNameList getExtension(folly::io::Cursor& cs) {
 
 template <>
 inline ServerNameList getExtension(folly::io::Cursor& cs) {
+  Buf buf;
+  cs.cloneAtMost(buf, 65536);
+  if (buf->isChained()) {
+    buf->coalesce();
+  }
+
+  std::unique_ptr<ServerNameListRecord> recordPtr(new ServerNameListRecord());
+  ServerNameListRecord *record = recordPtr.get();
+  parseServerNameList(buf->data(), buf->length(), &record);
+
+  if (record->count == 0) {
+    throw FizzException("invalid server name extension", AlertDescription::decode_error);
+  }
+
   ServerNameList names;
-  detail::readVector<uint16_t>(names.server_name_list, cs);
+  for (size_t i = 0; i < record->count; i++) {
+    names.server_name_list.push_back(
+      ServerName{
+        ServerNameType::host_name,
+        cloneIntoBuf(buf, record->server_names[i].offset, record->server_names[i].length)});
+  }
   return names;
 }
 

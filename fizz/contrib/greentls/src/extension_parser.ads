@@ -44,4 +44,7 @@ is
    procedure Parse_Protocol_Name_List (Buffer :     RFLX.Types.Bytes;
                                        Result : out CPP.Protocol_Name_List_Record);
 
+   procedure Parse_Server_Name_List (Buffer :     RFLX.Types.Bytes;
+                                     Result : out CPP.Server_Name_List_Record);
+
 end Extension_Parser;

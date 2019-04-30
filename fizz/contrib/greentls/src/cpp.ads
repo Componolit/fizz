@@ -391,6 +391,24 @@ is
      with
        Convention => C;
 
+   type Server_Name_Record is
+      record
+         Length : Uint16_T;
+         Offset : Uint32_T;
+      end record
+     with
+       Convention => C;
+
+   type Server_Name_Record_Array is array (Natural range <>) of Server_Name_Record;
+
+   type Server_Name_List_Record is
+      record
+         Count          : Uint8_T;
+         Server_Names : Server_Name_Record_Array (1 .. 8);
+      end record
+     with
+       Convention => C;
+
    procedure Parse_Signature_Algorithms (Buffer_Address :        System.Address;
                                          Buffer_Length  :        Interfaces.C.Size_T;
                                          Result_Address : in out System.Address) with
@@ -494,5 +512,13 @@ is
      Export => True,
      Convention => C,
      External_Name => "parseProtocolNameList";
+
+   procedure Parse_Server_Name_List (Buffer_Address :        System.Address;
+                                     Buffer_Length  :        Interfaces.C.Size_T;
+                                     Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseServerNameList";
 
 end CPP;
