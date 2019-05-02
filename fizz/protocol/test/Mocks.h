@@ -102,7 +102,7 @@ class MockHandshakeContext : public HandshakeContext {
     }));
 
     ON_CALL(*this, getFinishedData(_)).WillByDefault(InvokeWithoutArgs([]() {
-      return folly::IOBuf::copyBuffer("verifydata");
+      return folly::IOBuf::copyBuffer("verifydata_verifydata_verifydata");
     }));
   }
 };

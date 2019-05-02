@@ -2560,7 +2560,7 @@ TEST_F(ClientProtocolTest, TestFinishedEarlyFlow) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("sht")))
       .InSequence(contextSeq)
       .WillOnce(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(
       *mockHandshakeContext_,
       appendToTranscript(BufMatches("finishedencoding")))
@@ -2577,7 +2577,7 @@ TEST_F(ClientProtocolTest, TestFinishedEarlyFlow) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("cht")))
       .InSequence(contextSeq)
       .WillRepeatedly(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(*mockHandshakeContext_, appendToTranscript(_))
       .InSequence(contextSeq);
   EXPECT_CALL(*mockHandshakeContext_, getHandshakeContext())
@@ -2700,7 +2700,7 @@ TEST_F(ClientProtocolTest, TestFinishedEarlyFlowOmitEarlyRecord) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("sht")))
       .InSequence(contextSeq)
       .WillOnce(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(
       *mockHandshakeContext_,
       appendToTranscript(BufMatches("finishedencoding")))
@@ -2711,7 +2711,7 @@ TEST_F(ClientProtocolTest, TestFinishedEarlyFlowOmitEarlyRecord) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("cht")))
       .InSequence(contextSeq)
       .WillRepeatedly(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(*mockHandshakeContext_, appendToTranscript(_))
       .InSequence(contextSeq);
   EXPECT_CALL(*mockHandshakeContext_, getHandshakeContext())
@@ -2814,7 +2814,7 @@ void ClientProtocolTest::doFinishedFlow(ClientAuthType authType) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("sht")))
       .InSequence(contextSeq)
       .WillOnce(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(
       *mockHandshakeContext_,
       appendToTranscript(BufMatches("finishedencoding")))
@@ -2865,7 +2865,7 @@ void ClientProtocolTest::doFinishedFlow(ClientAuthType authType) {
   EXPECT_CALL(*mockHandshakeContext_, getFinishedData(RangeMatches("cht")))
       .InSequence(contextSeq)
       .WillRepeatedly(
-          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata"); }));
+          InvokeWithoutArgs([]() { return IOBuf::copyBuffer("verifydata_verifydata_verifydata"); }));
   EXPECT_CALL(*mockHandshakeContext_, appendToTranscript(_))
       .InSequence(contextSeq);
   EXPECT_CALL(*mockHandshakeContext_, getHandshakeContext())

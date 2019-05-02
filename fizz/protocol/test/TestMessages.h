@@ -63,18 +63,18 @@ struct TestMessages {
     modes.modes.push_back(PskKeyExchangeMode::psk_dhe_ke);
     modes.modes.push_back(PskKeyExchangeMode::psk_ke);
     chlo.extensions.push_back(encodeExtension(std::move(modes)));
-    chlo.originalEncoding = folly::IOBuf::copyBuffer("clienthelloencoding");
+    chlo.originalEncoding = folly::IOBuf::copyBuffer("clienthelloencoding_x_clienthelloencoding");
     return chlo;
   }
 
   static void addPsk(ClientHello& chlo, uint32_t ticketAge = 100000) {
     ClientPresharedKey cpk;
     PskIdentity ident;
-    ident.psk_identity = folly::IOBuf::copyBuffer("ident");
+    ident.psk_identity = folly::IOBuf::copyBuffer("_ident_");
     ident.obfuscated_ticket_age = ticketAge;
     cpk.identities.push_back(std::move(ident));
     PskBinder binder;
-    binder.binder = folly::IOBuf::copyBuffer("verifydata");
+    binder.binder = folly::IOBuf::copyBuffer("verifydata_verifydata_verifydata");
     cpk.binders.push_back(std::move(binder));
     chlo.extensions.push_back(encodeExtension(std::move(cpk)));
   }
@@ -195,7 +195,7 @@ struct TestMessages {
 
   static Finished finished() {
     Finished finished;
-    finished.verify_data = folly::IOBuf::copyBuffer("verifydata");
+    finished.verify_data = folly::IOBuf::copyBuffer("verifydata_verifydata_verifydata");
     finished.originalEncoding = folly::IOBuf::copyBuffer("finishedencoding");
     return finished;
   }

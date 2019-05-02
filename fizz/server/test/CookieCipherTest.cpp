@@ -67,7 +67,7 @@ TEST_F(GetCookieStateTest, TestBasic) {
       }));
   EXPECT_CALL(
       *mockHandshakeContext,
-      appendToTranscript(BufMatches("clienthelloencoding")))
+      appendToTranscript(BufMatches("clienthelloencoding_x_clienthelloencoding")))
       .InSequence(seq);
   EXPECT_CALL(*mockHandshakeContext, getHandshakeContext())
       .WillOnce(Invoke([]() { return IOBuf::copyBuffer("context"); }));
