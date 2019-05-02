@@ -588,13 +588,9 @@ inline size_t getBinderLength(const ClientHello& chlo) {
     throw FizzException(
         "psk not at end of client hello", AlertDescription::decode_error);
   }
-  folly::io::Cursor cursor(chlo.extensions.back().extension_data.get());
-  uint16_t identitiesLen;
-  detail::read(identitiesLen, cursor);
-  cursor.skip(identitiesLen);
-  uint16_t binderLen;
-  detail::read(binderLen, cursor);
-  if (cursor.totalLength() != binderLen) {
+  Buf buf = chlo.extensions.back().extension_data->cloneCoalesced();
+  uint16_t binderLen = parseClientPresharedKeyBindersLength(buf->data(), buf->length());
+  if (binderLen == 0) {
     throw FizzException(
         "malformed binder length", AlertDescription::decode_error);
   }

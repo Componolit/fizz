@@ -547,4 +547,11 @@ is
      Convention => C,
      External_Name => "parseCertificateAuthorities";
 
+   function Parse_Client_Preshared_Key_Binders_Length (Buffer_Address : System.Address;
+                                                       Buffer_Length  : Interfaces.C.Size_T) return Uint16_T with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseClientPresharedKeyBindersLength";
+
 end CPP;

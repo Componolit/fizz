@@ -50,4 +50,6 @@ is
    procedure Parse_Certificate_Authorities (Buffer :     RFLX.Types.Bytes;
                                             Result : out CPP.Certificate_Authorities_Record);
 
+   function Parse_Client_Preshared_Key_Binders_Length (Buffer : RFLX.Types.Bytes) return CPP.Uint16_T;
+
 end Extension_Parser;

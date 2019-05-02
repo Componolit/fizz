@@ -440,4 +440,14 @@ is
       end if;
    end;
 
+   function Parse_Client_Preshared_Key_Binders_Length (Buffer : RFLX.Types.Bytes) return CPP.Uint16_T
+   is
+   begin
+      Pre_Shared_Key_CH.Label (Buffer);
+      if Pre_Shared_Key_CH.Is_Valid (Buffer) then
+         return CPP.Uint16_T (Pre_Shared_Key_CH.Get_Binders_Length (Buffer));
+      end if;
+      return 0;
+   end;
+
 end Extension_Parser;

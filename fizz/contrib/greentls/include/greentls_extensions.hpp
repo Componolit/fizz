@@ -133,6 +133,7 @@ extern void parsePskKeyExchangeModes(const uint8_t*, size_t, PskKeyExchangeModes
 extern void parseProtocolNameList(const uint8_t*, size_t, ProtocolNameListRecord**);
 extern void parseServerNameList(const uint8_t*, size_t, ServerNameListRecord**);
 extern void parseCertificateAuthorities(const uint8_t*, size_t, CertificateAuthoritiesRecord**);
+extern uint16_t parseClientPresharedKeyBindersLength(const uint8_t*, size_t);
 
 #if defined(__cplusplus)
 }

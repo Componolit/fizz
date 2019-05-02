@@ -223,4 +223,14 @@ package body CPP is
       Extension_Parser.Parse_Certificate_Authorities (Buffer, Result);
    end Parse_Certificate_Authorities;
 
+   function Parse_Client_Preshared_Key_Binders_Length (Buffer_Address : System.Address;
+                                                       Buffer_Length  : Interfaces.C.Size_T) return Uint16_T
+   is
+      Buffer : RFLX.Types.Bytes (RFLX.Types.Index_Type'First .. RFLX.Types.Index_Type'First
+                                 + RFLX.Types.Length_Type (Buffer_Length) - 1) with
+        Address => Buffer_Address;
+   begin
+      return Extension_Parser.Parse_Client_Preshared_Key_Binders_Length (Buffer);
+   end Parse_Client_Preshared_Key_Binders_Length;
+
 end CPP;
