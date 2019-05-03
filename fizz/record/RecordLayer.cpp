@@ -80,25 +80,6 @@ static Param parse(Buf handshakeMsg, Buf original) {
   return std::move(msg);
 }
 
-template <>
-Param parse<ServerHello>(Buf handshakeMsg, Buf original) {
-  auto shlo = decode<ServerHello>(std::move(handshakeMsg));
-  if (shlo.random == HelloRetryRequest::HrrRandom) {
-    HelloRetryRequest hrr;
-    hrr.legacy_version = shlo.legacy_version;
-    hrr.legacy_session_id_echo = std::move(shlo.legacy_session_id_echo);
-    hrr.cipher_suite = shlo.cipher_suite;
-    hrr.legacy_compression_method = shlo.legacy_compression_method;
-    hrr.extensions = std::move(shlo.extensions);
-
-    hrr.originalEncoding = std::move(original);
-    return std::move(hrr);
-  } else {
-    shlo.originalEncoding = std::move(original);
-    return std::move(shlo);
-  }
-}
-
 std::vector<Extension> convertExtensions(Buf const& buf,
                                          uint8_t extensions_count,
                                          ExtensionRecord extensions[]) {

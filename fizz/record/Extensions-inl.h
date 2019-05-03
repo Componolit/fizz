@@ -600,17 +600,6 @@ inline size_t getBinderLength(const ClientHello& chlo) {
 namespace detail {
 
 template <>
-struct Reader<KeyShareEntry> {
-  template <class T>
-  size_t read(KeyShareEntry& out, folly::io::Cursor& cursor) {
-    size_t len = 0;
-    len += detail::read(out.group, cursor);
-    len += readBuf<uint16_t>(out.key_exchange, cursor);
-    return len;
-  }
-};
-
-template <>
 struct Writer<KeyShareEntry> {
   template <class T>
   void write(const KeyShareEntry& share, folly::io::Appender& out) {
@@ -624,17 +613,6 @@ struct Sizer<KeyShareEntry> {
   template <class T>
   size_t getSize(const KeyShareEntry& share) {
     return sizeof(NamedGroup) + getBufSize<uint16_t>(share.key_exchange);
-  }
-};
-
-template <>
-struct Reader<PskIdentity> {
-  template <class T>
-  size_t read(PskIdentity& out, folly::io::Cursor& cursor) {
-    size_t len = 0;
-    len += readBuf<uint16_t>(out.psk_identity, cursor);
-    len += detail::read(out.obfuscated_ticket_age, cursor);
-    return len;
   }
 };
 
@@ -704,17 +682,6 @@ struct Sizer<ProtocolName> {
 };
 
 template <>
-struct Reader<ServerName> {
-  template <class T>
-  size_t read(ServerName& name, folly::io::Cursor& cursor) {
-    size_t size = 0;
-    size += detail::read(name.name_type, cursor);
-    size += readBuf<uint16_t>(name.hostname, cursor);
-    return size;
-  }
-};
-
-template <>
 struct Writer<ServerName> {
   template <class T>
   void write(const ServerName& name, folly::io::Appender& out) {
@@ -728,14 +695,6 @@ struct Sizer<ServerName> {
   template <class T>
   size_t getSize(const ServerName& name) {
     return sizeof(ServerNameType) + getBufSize<uint16_t>(name.hostname);
-  }
-};
-
-template <>
-struct Reader<DistinguishedName> {
-  template <class T>
-  size_t read(DistinguishedName& dn, folly::io::Cursor& cursor) {
-    return readBuf<uint16_t>(dn.encoded_name, cursor);
   }
 };
 
