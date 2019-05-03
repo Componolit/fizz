@@ -248,12 +248,7 @@ package TLS_Handshake is
       RSA_PSS_PSS_SHA384 => 16#080A#,
       RSA_PSS_PSS_SHA512 => 16#080B#,
       RSA_PKCS1_SHA1 => 16#0201#,
-      ECDSA_SHA1 => 16#0203#,
-      -- FIXME: deprecated schemes needed for Fizz tests
-      DEPRECATED_0 => 16#0202#,
-      DEPRECATED_1 => 16#0402#,
-      DEPRECATED_2 => 16#0502#,
-      DEPRECATED_3 => 16#0602#
+      ECDSA_SHA1 => 16#0203#
    ) with Size => 16;
 
    type Signature_Length_Type is range 0 .. 2**16 - 1 with Size => 16;
