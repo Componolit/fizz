@@ -98,7 +98,7 @@ is
          Cipher_Suites_Count      : Uint8_T;
          Cipher_Suites            : Uint16_T_Array (1 .. 4);
          Extensions_Count         : Uint8_T;
-         Extensions               : Extension_Record_Array (1 .. 8);
+         Extensions               : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;
@@ -110,7 +110,7 @@ is
          Legacy_Session_Id        : Uint8_T_Array (1 .. 256);
          Cipher_Suite             : Uint16_T;
          Extensions_Count         : Uint8_T;
-         Extensions               : Extension_Record_Array (1 .. 8);
+         Extensions               : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;
@@ -118,7 +118,7 @@ is
    type Encrypted_Extensions_Record is
       record
          Extensions_Count : Uint8_T;
-         Extensions       : Extension_Record_Array (1 .. 8);
+         Extensions       : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;
@@ -128,7 +128,7 @@ is
          Certificate_Entry_Length : Uint32_T;
          Certificate_Entry_Offset : Uint32_T;
          Extensions_Count         : Uint8_T;
-         Extensions               : Extension_Record_Array (1 .. 8);
+         Extensions               : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;
@@ -150,7 +150,7 @@ is
          Certificate_Request_Context_Length : Uint32_T;
          Certificate_Request_Context_Offset : Uint32_T;
          Extensions_Count                   : Uint8_T;
-         Extensions                         : Extension_Record_Array (1 .. 8);
+         Extensions                         : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;
@@ -181,7 +181,7 @@ is
          Ticket_Length       : Uint32_T;
          Ticket_Offset       : Uint32_T;
          Extensions_Count    : Uint8_T;
-         Extensions          : Extension_Record_Array (1 .. 8);
+         Extensions          : Extension_Record_Array (1 .. 16);
       end record
      with
        Convention => C;

@@ -1,7 +1,7 @@
 #ifndef GREENTLS_HPP
 #define GREENTLS_HPP
 
-#define MAX_EXTENSIONS 8
+#define MAX_EXTENSIONS 16
 #define MAX_CERTIFICATES 8
 
 #include <cstdint>

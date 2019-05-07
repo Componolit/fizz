@@ -39,7 +39,7 @@ package body Parser with
 is
 
    procedure Parse_Record_Message (Buffer :     RFLX.Types.Bytes;
-                                             Result : out CPP.Record_Record) is
+                                   Result : out CPP.Record_Record) is
    begin
       Result := (Valid_Plaintext => CPP.Bool (False),
                  Valid_Ciphertext => CPP.Bool (False),
@@ -122,7 +122,7 @@ is
             Extensions_Count         : CPP.Uint8_T;
             Extensions_First         : RFLX.Types.Index_Type;
             Extensions_Last          : RFLX.Types.Index_Type;
-            Extension_List           : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List           : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Legacy_Session_ID_Length := Client_Hello.Get_Legacy_Session_ID_Length (Buffer);
             Client_Hello.Get_Legacy_Session_ID (Buffer, Legacy_Session_ID_First, Legacy_Session_ID_Last);
@@ -178,7 +178,7 @@ is
             Extensions_Count         : CPP.Uint8_T;
             Extensions_First         : RFLX.Types.Index_Type;
             Extensions_Last          : RFLX.Types.Index_Type;
-            Extension_List           : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List           : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Legacy_Session_ID_Length := Server_Hello.Get_Legacy_Session_ID_Length (Buffer);
             Server_Hello.Get_Legacy_Session_ID (Buffer, Legacy_Session_ID_First, Legacy_Session_ID_Last);
@@ -240,7 +240,7 @@ is
             Extensions_Count    : CPP.Uint8_T;
             Extensions_First    : RFLX.Types.Index_Type;
             Extensions_Last     : RFLX.Types.Index_Type;
-            Extension_List      : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List      : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Ticket_Lifetime := New_Session_Ticket.Get_Ticket_Lifetime (Buffer);
 
@@ -290,7 +290,7 @@ is
             Extensions_Count : CPP.Uint8_T;
             Extensions_First : RFLX.Types.Index_Type;
             Extensions_Last  : RFLX.Types.Index_Type;
-            Extension_List   : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List   : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Encrypted_Extensions.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
             Parse_EE_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
@@ -337,7 +337,7 @@ is
             Extensions_Count : CPP.Uint8_T;
             Extensions_First : RFLX.Types.Index_Type;
             Extensions_Last  : RFLX.Types.Index_Type;
-            Extension_List   : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List   : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Cert_Data_Length := Certificate_Entry.Get_Cert_Data_Length (Buffer (Cursor.First .. Cursor.Last));
             Cert_Data_First := Certificate_Entry.Get_Cert_Data_First (Buffer (Cursor.First .. Cursor.Last));
@@ -368,7 +368,7 @@ is
             Certificates_Count : CPP.Uint8_T;
             Certificates_First : RFLX.Types.Index_Type;
             Certificates_Last  : RFLX.Types.Index_Type;
-            Extension_List     : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List     : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
             Certificate_List   : CPP.Certificate_Entry_Record_Array (1 .. 8) := (others => (0, 0, 0, Extension_List));
          begin
             Context_Length := Certificate.Get_Certificate_Request_Context_Length (Buffer);
@@ -401,7 +401,7 @@ is
             Extensions_Count : CPP.Uint8_T;
             Extensions_First : RFLX.Types.Index_Type;
             Extensions_Last  : RFLX.Types.Index_Type;
-            Extension_List   : CPP.Extension_Record_Array (1 .. 8) := (others => (0, 0, 0));
+            Extension_List   : CPP.Extension_Record_Array (1 .. 16) := (others => (0, 0, 0));
          begin
             Length := Certificate_Request.Get_Certificate_Request_Context_Length (Buffer);
             First := Certificate_Request.Get_Certificate_Request_Context_First (Buffer);
