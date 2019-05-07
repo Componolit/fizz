@@ -10,6 +10,9 @@ package Parser
   with SPARK_Mode
 is
 
+   procedure Parse_Record_Message (Buffer :     RFLX.Types.Bytes;
+                                   Result : out CPP.Record_Record);
+
    procedure Parse_Handshake_Message (Buffer :     RFLX.Types.Bytes;
                                       Result : out CPP.Handshake_Record);
 

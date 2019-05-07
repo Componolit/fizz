@@ -1,4 +1,5 @@
 with CPP;
+with RFLX; use RFLX;
 with RFLX.Types; use type RFLX.Types.Byte; use type RFLX.Types.Length_Type;
 with RFLX.TLS_Alert.Alert; use RFLX.TLS_Alert;
 with RFLX.TLS_Handshake; use RFLX.TLS_Handshake;
@@ -31,10 +32,33 @@ with RFLX.TLS_Handshake.CR_Extension;
 with RFLX.TLS_Handshake.CR_Extensions;
 with RFLX.TLS_Handshake.NST_Extension;
 with RFLX.TLS_Handshake.NST_Extensions;
+with RFLX.TLS_Record.TLS_Record;
 
 package body Parser with
   SPARK_Mode
 is
+
+   procedure Parse_Record_Message (Buffer :     RFLX.Types.Bytes;
+                                             Result : out CPP.Record_Record) is
+   begin
+      Result := (Valid_Plaintext => CPP.Bool (False),
+                 Valid_Ciphertext => CPP.Bool (False),
+                 Tag => 0,
+                 Length => 0);
+
+      TLS_Record.TLS_Record.Label (Buffer);
+
+      if TLS_Record.TLS_Record.Valid_Length (Buffer) then
+         Result.Tag := CPP.Uint8_T (TLS_Record.Convert_To_Content_Type_Base (TLS_Record.TLS_Record.Get_Tag (Buffer)));
+         Result.Length := CPP.Uint16_T (TLS_Record.TLS_Record.Get_Length (Buffer));
+
+         if TLS_Record.TLS_Record.Valid_Fragment (Buffer) then
+            Result.Valid_Plaintext := CPP.Bool (True);
+         elsif TLS_Record.TLS_Record.Valid_Encrypted_Record (Buffer) then
+            Result.Valid_Ciphertext := CPP.Bool (True);
+         end if;
+      end if;
+   end Parse_Record_Message;
 
    procedure Parse_Extensions (Buffer :        RFLX.Types.Bytes;
                                Count  :    out CPP.Uint8_T;

@@ -40,23 +40,37 @@ folly::Optional<Buf> EncryptedReadRecordLayer::getDecryptedBuf(
     adCursor.pull(ad.data(), ad.size());
     folly::IOBuf adBuf{folly::IOBuf::wrapBufferAsValue(folly::range(ad))};
 
-    auto contentType =
-        static_cast<ContentType>(cursor.readBE<ContentTypeType>());
-    cursor.skip(sizeof(ProtocolVersion));
+    Buf b;
+    cursor.cloneAtMost(b, 65536);
+    b->unshare();
+    if (b->isChained()) {
+      b->coalesce();
+    }
 
-    auto length = cursor.readBE<uint16_t>();
+    std::unique_ptr<RecordRecord> recordPtr(new RecordRecord());
+    RecordRecord *record = recordPtr.get();
+    parseRecordMessage(b->data(), b->length(), &record);
+
+    if (!record->valid_ciphertext && record->content_type == 0 && record->length == 0) {
+      throw FizzException("invalid encrypted record message", AlertDescription::decode_error);
+    }
+
+    auto contentType = ContentType(record->content_type);
+
+    auto length = record->length;
     if (length == 0) {
       throw std::runtime_error("received 0 length encrypted record");
     }
     if (length > kMaxEncryptedRecordSize) {
       throw std::runtime_error("received too long encrypted record");
     }
-    auto consumedBytes = cursor - frontBuf;
-    if (buf.chainLength() < consumedBytes + length) {
+    if (b->length() < kEncryptedHeaderSize + length) {
       return folly::none;
     }
 
     if (contentType == ContentType::alert && length == 2) {
+      cursor = folly::io::Cursor(frontBuf);
+      cursor.skip(kEncryptedHeaderSize);
       auto alert = parseAlert(cursor);
       throw std::runtime_error(folly::to<std::string>(
           "received plaintext alert in encrypted record: ",
@@ -66,12 +80,12 @@ folly::Optional<Buf> EncryptedReadRecordLayer::getDecryptedBuf(
     // If we already know that the length of the buffer is the
     // same as the number of bytes we need, move the entire buffer.
     std::unique_ptr<folly::IOBuf> encrypted;
-    if (buf.chainLength() == consumedBytes + length) {
+    if (buf.chainLength() == kEncryptedHeaderSize + length) {
       encrypted = buf.move();
     } else {
-      encrypted = buf.split(consumedBytes + length);
+      encrypted = buf.split(kEncryptedHeaderSize + length);
     }
-    trimStart(*encrypted, consumedBytes);
+    trimStart(*encrypted, kEncryptedHeaderSize);
 
     if (contentType == ContentType::change_cipher_spec) {
       encrypted->coalesce();

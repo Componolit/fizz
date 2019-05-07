@@ -7,6 +7,13 @@
 #include <cstdint>
 #include <cstdlib>
 
+struct RecordRecord {
+    bool valid_plaintext;
+    bool valid_ciphertext;
+    uint8_t content_type;
+    uint16_t length;
+};
+
 struct ExtensionRecord {
     uint16_t type;
     uint16_t length;
@@ -110,6 +117,7 @@ struct AlertRecord {
 extern "C" {
 #endif
 
+extern void parseRecordMessage(const uint8_t*, size_t, RecordRecord**);
 extern void parseHandshakeMessage(const uint8_t*, size_t, HandshakeRecord**);
 extern void parseAlertMessage(const uint8_t*, size_t, AlertRecord**);
 

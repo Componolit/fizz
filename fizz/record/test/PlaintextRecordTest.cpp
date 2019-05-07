@@ -110,21 +110,21 @@ TEST_F(PlaintextRecordTest, TestDataRemaining) {
 
 TEST_F(PlaintextRecordTest, TestSkipAndWait) {
   read_.setSkipEncryptedRecords(true);
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_FALSE(read_.read(queue_).hasValue());
   EXPECT_TRUE(queue_.empty());
 }
 
 TEST_F(PlaintextRecordTest, TestWaitBeforeSkip) {
   read_.setSkipEncryptedRecords(true);
-  addToQueue("170301000501234567");
+  addToQueue("170303000501234567");
   EXPECT_FALSE(read_.read(queue_).hasValue());
-  expectSame(queue_.move(), "170301000501234567");
+  expectSame(queue_.move(), "170303000501234567");
 }
 
 TEST_F(PlaintextRecordTest, TestSkipAndRead) {
   read_.setSkipEncryptedRecords(true);
-  addToQueue("170301000501234567891703010005012345678916030100050123456789");
+  addToQueue("170303000501234567891703030005012345678916030100050123456789");
   auto msg = read_.read(queue_);
   EXPECT_EQ(msg->type, ContentType::handshake);
   expectSame(msg->fragment, "0123456789");

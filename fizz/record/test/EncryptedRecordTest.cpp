@@ -64,7 +64,7 @@ TEST_F(EncryptedRecordTest, TestReadEmpty) {
 }
 
 TEST_F(EncryptedRecordTest, TestReadHandshake) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -77,7 +77,7 @@ TEST_F(EncryptedRecordTest, TestReadHandshake) {
 }
 
 TEST_F(EncryptedRecordTest, TestReadAlert) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -90,7 +90,7 @@ TEST_F(EncryptedRecordTest, TestReadAlert) {
 }
 
 TEST_F(EncryptedRecordTest, TestReadAppData) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         EXPECT_FALSE(buf->isShared());
@@ -104,7 +104,7 @@ TEST_F(EncryptedRecordTest, TestReadAppData) {
 }
 
 TEST_F(EncryptedRecordTest, TestReadUnknown) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -114,30 +114,30 @@ TEST_F(EncryptedRecordTest, TestReadUnknown) {
 }
 
 TEST_F(EncryptedRecordTest, TestWaitForData) {
-  addToQueue("1703010010012345");
+  addToQueue("1703030010012345");
   EXPECT_FALSE(read_.read(queue_).hasValue());
   EXPECT_EQ(queue_.chainLength(), 8);
 }
 
 TEST_F(EncryptedRecordTest, TestWaitForHeader) {
-  addToQueue("16030102");
+  addToQueue("17030302");
   EXPECT_FALSE(read_.read(queue_).hasValue());
   EXPECT_EQ(queue_.chainLength(), 4);
 }
 
 TEST_F(EncryptedRecordTest, TestMaxSize) {
-  addToQueue("1603014100");
+  addToQueue("1703034100");
   EXPECT_FALSE(read_.read(queue_).hasValue());
   EXPECT_EQ(queue_.chainLength(), 5);
 }
 
 TEST_F(EncryptedRecordTest, TestOverSize) {
-  addToQueue("1603015000");
+  addToQueue("1703035000");
   EXPECT_ANY_THROW(read_.read(queue_));
 }
 
 TEST_F(EncryptedRecordTest, TestDataRemaining) {
-  addToQueue("17030100050123456789aa");
+  addToQueue("17030300050123456789aa");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -148,7 +148,7 @@ TEST_F(EncryptedRecordTest, TestDataRemaining) {
 }
 
 TEST_F(EncryptedRecordTest, TestPadding) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -161,7 +161,7 @@ TEST_F(EncryptedRecordTest, TestPadding) {
 }
 
 TEST_F(EncryptedRecordTest, TestAllPaddingAppData) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -174,7 +174,7 @@ TEST_F(EncryptedRecordTest, TestAllPaddingAppData) {
 }
 
 TEST_F(EncryptedRecordTest, TestAllPaddingHandshake) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -184,7 +184,7 @@ TEST_F(EncryptedRecordTest, TestAllPaddingHandshake) {
 }
 
 TEST_F(EncryptedRecordTest, TestNoContentType) {
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _decrypt(_, _, 0))
       .WillOnce(Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
         expectSame(buf, "0123456789");
@@ -195,7 +195,7 @@ TEST_F(EncryptedRecordTest, TestNoContentType) {
 
 TEST_F(EncryptedRecordTest, TestReadSeqNum) {
   for (int i = 0; i < 10; i++) {
-    addToQueue("17030100050123456789");
+    addToQueue("17030300050123456789");
     EXPECT_CALL(*readAead_, _decrypt(_, _, i))
         .WillOnce(
             Invoke([](std::unique_ptr<IOBuf>& buf, const IOBuf*, uint64_t) {
@@ -208,7 +208,7 @@ TEST_F(EncryptedRecordTest, TestReadSeqNum) {
 
 TEST_F(EncryptedRecordTest, TestSkipAndWait) {
   read_.setSkipFailedDecryption(true);
-  addToQueue("17030100050123456789");
+  addToQueue("17030300050123456789");
   EXPECT_CALL(*readAead_, _tryDecrypt(_, _, 0))
       .WillOnce(
           Invoke([](std::unique_ptr<IOBuf>& /*buf*/, const IOBuf*, uint64_t) {
@@ -221,7 +221,7 @@ TEST_F(EncryptedRecordTest, TestSkipAndWait) {
 TEST_F(EncryptedRecordTest, TestSkipAndRead) {
   Sequence s;
   read_.setSkipFailedDecryption(true);
-  addToQueue("1703010005012345678917030100050123456789170301000501234567aa");
+  addToQueue("1703030005012345678917030300050123456789170303000501234567aa");
   EXPECT_CALL(*readAead_, _tryDecrypt(_, _, 0))
       .InSequence(s)
       .WillOnce(

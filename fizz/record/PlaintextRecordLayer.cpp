@@ -10,6 +10,8 @@
 
 #include <folly/String.h>
 
+#include "greentls.hpp"
+
 namespace fizz {
 
 using ContentTypeType = typename std::underlying_type<ContentType>::type;
@@ -29,24 +31,37 @@ folly::Optional<TLSMessage> PlaintextReadRecordLayer::read(
       return folly::none;
     }
 
-    TLSMessage msg;
-    msg.type = static_cast<ContentType>(cursor.readBE<ContentTypeType>());
+    Buf b;
+    cursor.cloneAtMost(b, 65536);
+    if (b->isChained()) {
+      b->coalesce();
+    }
+
+    std::unique_ptr<RecordRecord> recordPtr(new RecordRecord());
+    RecordRecord *record = recordPtr.get();
+    parseRecordMessage(b->data(), b->length(), &record);
+
+    if (b->length() < kPlaintextHeaderSize + record->length) {
+      return folly::none;
+    }
 
     if (skipEncryptedRecords_) {
-      if (msg.type == ContentType::application_data) {
-        cursor.skip(sizeof(ProtocolVersion));
-        auto length = cursor.readBE<uint16_t>();
-        if (buf.chainLength() < (cursor - buf.front()) + length) {
-          return folly::none;
-        }
-        length +=
-            sizeof(ContentType) + sizeof(ProtocolVersion) + sizeof(uint16_t);
-        buf.trimStart(length);
+      if (!record->valid_ciphertext && record->content_type == 0 && record->length == 0) {
+        throw FizzException("invalid encrypted record message", AlertDescription::decode_error);
+      }
+
+      ContentType type = ContentType(record->content_type);
+
+      if (type == ContentType::application_data) {
+        buf.trimStart(kPlaintextHeaderSize + record->length);
         continue;
-      } else if (msg.type != ContentType::change_cipher_spec) {
+      } else if (type != ContentType::change_cipher_spec) {
         skipEncryptedRecords_ = false;
       }
     }
+
+    TLSMessage msg;
+    msg.type = ContentType(record->content_type);
 
     switch (msg.type) {
       case ContentType::handshake:
@@ -62,20 +77,16 @@ folly::Optional<TLSMessage> PlaintextReadRecordLayer::read(
             folly::hexlify(buf.splitAtMost(10)->coalesce())));
     }
 
-    receivedRecordVersion_ =
-        static_cast<ProtocolVersion>(cursor.readBE<ProtocolVersionType>());
-
-    auto length = cursor.readBE<uint16_t>();
+    auto length = record->length;
     if (length > kMaxPlaintextRecordSize) {
       throw std::runtime_error("received too long plaintext record");
     }
     if (length == 0) {
       throw std::runtime_error("received empty plaintext record");
     }
-    if (buf.chainLength() < (cursor - buf.front()) + length) {
-      return folly::none;
-    }
 
+    cursor = folly::io::Cursor(buf.front());
+    cursor.skip(kPlaintextHeaderSize);
     cursor.clone(msg.fragment, length);
 
     buf.trimStart(cursor - buf.front());
@@ -88,6 +99,10 @@ folly::Optional<TLSMessage> PlaintextReadRecordLayer::read(
         throw FizzException(
             "received ccs", AlertDescription::illegal_parameter);
       }
+    }
+
+    if (!record->valid_plaintext || record->content_type == 0) {
+      throw FizzException("invalid record message", AlertDescription::decode_error);
     }
 
     return std::move(msg);

@@ -69,6 +69,16 @@ is
    subtype Uintmax_T is CPP.Unsigned_Long;
    subtype Uintmax_T_Array is CPP.Unsigned_Long_Array;
 
+   type Record_Record is
+      record
+         Valid_Plaintext  : Bool;
+         Valid_Ciphertext : Bool;
+         Tag              : Uint8_T;
+         Length           : Uint16_T;
+      end record
+     with
+       Convention => C;
+
    type Extension_Record is
       record
          Tag    : Uint16_T;
@@ -225,6 +235,14 @@ is
       end record
      with
        Convention => C;
+
+   procedure Parse_Record_Message (Buffer_Address :        System.Address;
+                                   Buffer_Length  :        Interfaces.C.Size_T;
+                                   Result_Address : in out System.Address) with
+     Global => null,
+     Export => True,
+     Convention => C,
+     External_Name => "parseRecordMessage";
 
    procedure Parse_Handshake_Message (Buffer_Address :        System.Address;
                                       Buffer_Length  :        Interfaces.C.Size_T;
