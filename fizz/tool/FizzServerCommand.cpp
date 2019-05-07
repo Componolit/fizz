@@ -50,6 +50,7 @@ void printUsage() {
     << " -certcompression a1,...  (enables certificate compression support for given algorithms. Default: None)\n"
     << " -fallback                (enables falling back to OpenSSL for pre-1.3 connections. Default: false)\n"
     << " -loop                    (don't exit after client disconnect. Default: false)\n"
+    << " -www                     (respond to a 'GET /'. Default: false)\n"
     << " -quiet                   (hide informational logging. Default: false)\n"
     << " -v verbosity             (set verbose log level for VLOG macros. Default: 0)\n"
     << " -vmodule m1=N,...        (set per-module verbose log level for VLOG macros. Default: none)\n";
@@ -62,6 +63,7 @@ class FizzServerAcceptor : AsyncServerSocket::AcceptCallback {
       uint16_t port,
       std::shared_ptr<FizzServerContext> serverCtx,
       bool loop,
+      bool www,
       EventBase* evb,
       std::shared_ptr<SSLContext> sslCtx);
   void connectionAccepted(
@@ -73,6 +75,7 @@ class FizzServerAcceptor : AsyncServerSocket::AcceptCallback {
 
  private:
   bool loop_{false};
+  bool www_{false};
   EventBase* evb_{nullptr};
   std::shared_ptr<FizzServerContext> ctx_;
   std::shared_ptr<SSLContext> sslCtx_;
@@ -89,8 +92,9 @@ class FizzExampleServer : public AsyncFizzServer::HandshakeCallback,
   explicit FizzExampleServer(
       std::shared_ptr<AsyncFizzServer> transport,
       FizzServerAcceptor* acceptor,
-      std::shared_ptr<SSLContext> sslCtx)
-      : transport_(transport), acceptor_(acceptor), sslCtx_(sslCtx) {}
+      std::shared_ptr<SSLContext> sslCtx,
+      bool www)
+      : transport_(transport), acceptor_(acceptor), sslCtx_(sslCtx), www_(www) {}
   void fizzHandshakeSuccess(AsyncFizzServer* server) noexcept override {
     server->setReadCB(this);
     connected_ = true;
@@ -146,7 +150,11 @@ class FizzExampleServer : public AsyncFizzServer::HandshakeCallback,
   }
 
   void readBufferAvailable(std::unique_ptr<IOBuf> buf) noexcept override {
-    std::cout << StringPiece(buf->coalesce()).str();
+    StringPiece s = StringPiece(buf->coalesce());
+    std::cout << s.str();
+    if (www_ && s.find("GET /") != std::string::npos) {
+      transport_->writeChain(nullptr, IOBuf::copyBuffer("HTTP/1.1 200 OK\nContent-Length: 4\n\nFizz\n"));
+    }
   }
 
   void readEOF() noexcept override {
@@ -230,6 +238,7 @@ class FizzExampleServer : public AsyncFizzServer::HandshakeCallback,
   AsyncSSLSocket::UniquePtr sslSocket_;
   FizzServerAcceptor* acceptor_;
   std::shared_ptr<SSLContext> sslCtx_;
+  bool www_{false};
   std::array<char, 8192> readBuf_;
   bool connected_{false};
 };
@@ -238,9 +247,10 @@ FizzServerAcceptor::FizzServerAcceptor(
     uint16_t port,
     std::shared_ptr<FizzServerContext> serverCtx,
     bool loop,
+    bool www,
     EventBase* evb,
     std::shared_ptr<SSLContext> sslCtx)
-    : loop_(loop), evb_(evb), ctx_(serverCtx), sslCtx_(sslCtx) {
+    : loop_(loop), www_(www), evb_(evb), ctx_(serverCtx), sslCtx_(sslCtx) {
   socket_ = AsyncServerSocket::UniquePtr(new AsyncServerSocket(evb_));
   socket_->bind(port);
   socket_->listen(100);
@@ -257,7 +267,7 @@ void FizzServerAcceptor::connectionAccepted(
   std::shared_ptr<AsyncFizzServer> transport = AsyncFizzServer::UniquePtr(
       new AsyncFizzServer(AsyncSocket::UniquePtr(sock), ctx_));
   socket_->pauseAccepting();
-  auto serverCb = std::make_unique<FizzExampleServer>(transport, this, sslCtx_);
+  auto serverCb = std::make_unique<FizzExampleServer>(transport, this, sslCtx_, www_);
   inputHandler_ = std::make_unique<TerminalInputHandler>(evb_, serverCb.get());
   cb_ = std::move(serverCb);
   transport->accept(cb_.get());
@@ -295,6 +305,7 @@ int fizzServerCommand(const std::vector<std::string>& args) {
   std::vector<std::string> alpns;
   folly::Optional<std::vector<CertificateCompressionAlgorithm>> compAlgos;
   bool loop = false;
+  bool www = false;
   bool fallback = false;
 
   // clang-format off
@@ -336,6 +347,7 @@ int fizzServerCommand(const std::vector<std::string>& args) {
         }
     }}},
     {"-loop", {false, [&loop](const std::string&) { loop = true; }}},
+    {"-www", {false, [&www](const std::string&) { www = true; }}},
     {"-quiet", {false, [](const std::string&) {
         FLAGS_minloglevel = google::GLOG_ERROR;
     }}},
@@ -471,7 +483,7 @@ int fizzServerCommand(const std::vector<std::string>& args) {
 
   serverContext->setSupportedVersions(
       {ProtocolVersion::tls_1_3, ProtocolVersion::tls_1_3_28});
-  FizzServerAcceptor acceptor(port, serverContext, loop, &evb, sslContext);
+  FizzServerAcceptor acceptor(port, serverContext, loop, www, &evb, sslContext);
   evb.loop();
   return 0;
 }
