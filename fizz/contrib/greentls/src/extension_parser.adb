@@ -40,10 +40,11 @@ is
    procedure Parse_Signature_Algorithms (Buffer :     RFLX.Types.Bytes;
                                          Result : out CPP.Signature_Algorithms_Record)
    is
-      First  : RFLX.Types.Length_Type;
-      Last   : RFLX.Types.Length_Type;
-      Cursor : RFLX.TLS_Handshake.Signature_Schemes.Cursor_Type;
-      Index  : Natural := 1;
+      First     : RFLX.Types.Length_Type;
+      Last      : RFLX.Types.Length_Type;
+      Cursor    : RFLX.TLS_Handshake.Signature_Schemes.Cursor_Type;
+      Index     : Natural := 1;
+      Algorithm : Signature_Scheme;
    begin
       Result := (Count => 0,
                  Algorithms => (others => 0));
@@ -54,9 +55,12 @@ is
          Cursor := Signature_Schemes.First (Buffer (First .. Last));
          while Index <= Result.Algorithms'Last and then Signature_Schemes.Valid_Element (Buffer (First .. Last), Cursor) loop
             pragma Loop_Invariant (Index >= Result.Algorithms'First);
-            Result.Algorithms (Index) := CPP.Uint16_T (Convert_To_Signature_Scheme_Base (Signature_Schemes.Get_Element (Buffer (First .. Last), Cursor)));
+            Algorithm := Signature_Schemes.Get_Element (Buffer (First .. Last), Cursor);
+            if Algorithm.Known then
+               Result.Algorithms (Index) := CPP.Uint16_T (Convert_To_Signature_Scheme_Base (Algorithm.Enum));
+               Index := Index + 1;
+            end if;
             Signature_Schemes.Next (Buffer (First .. Last), Cursor);
-            Index := Index + 1;
          end loop;
          Result.Count := RFLX.Types.Byte (Index - 1);
       end if;
@@ -69,6 +73,7 @@ is
       Last   : RFLX.Types.Length_Type;
       Cursor : RFLX.TLS_Handshake.Named_Groups.Cursor_Type;
       Index  : Natural := 1;
+      Group  : Named_Group;
    begin
       Result := (Count => 0,
                  Groups => (others => 0));
@@ -79,9 +84,12 @@ is
          Cursor := Named_Groups.First (Buffer (First .. Last));
          while Index <= Result.Groups'Last and then Named_Groups.Valid_Element (Buffer (First .. Last), Cursor) loop
             pragma Loop_Invariant (Index >= Result.Groups'First);
-            Result.Groups (Index) := CPP.Uint16_T (Convert_To_Named_Group_Base (Named_Groups.Get_Element (Buffer (First .. Last), Cursor)));
+            Group := Named_Groups.Get_Element (Buffer (First .. Last), Cursor);
+            if Group.Known then
+               Result.Groups (Index) := CPP.Uint16_T (Convert_To_Named_Group_Base (Group.Enum));
+               Index := Index + 1;
+            end if;
             Named_Groups.Next (Buffer (First .. Last), Cursor);
-            Index := Index + 1;
          end loop;
          Result.Count := RFLX.Types.Byte (Index - 1);
       end if;
@@ -94,6 +102,7 @@ is
       Last   : RFLX.Types.Length_Type;
       Cursor : RFLX.TLS_Handshake.Key_Share_Entries.Cursor_Type;
       Index  : Natural := 1;
+      Group  : Named_Group;
    begin
       Result := (Valid => CPP.Bool (False),
                  Count => 0,
@@ -116,11 +125,14 @@ is
                pragma Loop_Invariant (Key_Share_Entry.Is_Valid (Buffer (Cf .. Cl)));
             end;
 
-            Result.Shares (Index) := (Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Key_Share_Entry.Get_Group (Buffer (Cursor.First .. Cursor.Last)))),
-                                      Length => CPP.Uint16_T (Key_Share_Entry.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
-                                      Offset => CPP.Uint32_T (Key_Share_Entry.Get_Key_Exchange_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
+            Group := Key_Share_Entry.Get_Group (Buffer (Cursor.First .. Cursor.Last));
+            if Group.Known then
+               Result.Shares (Index) := (Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Group.Enum)),
+                                         Length => CPP.Uint16_T (Key_Share_Entry.Get_Length (Buffer (Cursor.First .. Cursor.Last))),
+                                         Offset => CPP.Uint32_T (Key_Share_Entry.Get_Key_Exchange_First (Buffer (Cursor.First .. Cursor.Last)) - 1));
+               Index := Index + 1;
+            end if;
             Key_Share_Entries.Next (Buffer (First .. Last), Cursor);
-            Index := Index + 1;
          end loop;
          Result.Count := RFLX.Types.Byte (Index - 1);
       end if;
@@ -130,30 +142,38 @@ is
    procedure Parse_Server_Key_Share (Buffer :     RFLX.Types.Bytes;
                                      Result : out CPP.Server_Key_Share_Record)
    is
+      Group : Named_Group;
    begin
       Result := (Valid => CPP.Bool (False),
                  Share => (0, 0, 0));
 
       Key_Share_SH.Label (Buffer);
       if Key_Share_SH.Is_Valid (Buffer) then
-         Result := (Valid => CPP.Bool (True),
-                    Share => (Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Key_Share_SH.Get_Group (Buffer))),
-                              Length => CPP.Uint16_T (Key_Share_SH.Get_Length (Buffer)),
-                              Offset => CPP.Uint32_T (Key_Share_SH.Get_Key_Exchange_First (Buffer) - 1)));
+         Group := Key_Share_SH.Get_Group (Buffer);
+         if Group.Known then
+            Result := (Valid => CPP.Bool (True),
+                       Share => (Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Group.Enum)),
+                                 Length => CPP.Uint16_T (Key_Share_SH.Get_Length (Buffer)),
+                                 Offset => CPP.Uint32_T (Key_Share_SH.Get_Key_Exchange_First (Buffer) - 1)));
+         end if;
       end if;
    end;
 
    procedure Parse_Hello_Retry_Request_Key_Share (Buffer :     RFLX.Types.Bytes;
                                                   Result : out CPP.Hello_Retry_Request_Key_Share_Record)
    is
+      Group : Named_Group;
    begin
       Result := (Valid => CPP.Bool (False),
                  Selected_Group => 0);
 
       Key_Share_HRR.Label (Buffer);
       if Key_Share_HRR.Is_Valid (Buffer) then
-         Result := (Valid => CPP.Bool (True),
-                    Selected_Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Key_Share_HRR.Get_Selected_Group (Buffer))));
+         Group := Key_Share_HRR.Get_Selected_Group (Buffer);
+         if Group.Known then
+            Result := (Valid => CPP.Bool (True),
+                       Selected_Group => CPP.Uint16_T (Convert_To_Named_Group_Base (Group.Enum)));
+         end if;
       end if;
    end;
 
@@ -274,6 +294,7 @@ is
       Last   : RFLX.Types.Length_Type;
       Cursor : RFLX.TLS_Handshake.Protocol_Versions.Cursor_Type;
       Index  : Natural := 1;
+      Version : Protocol_Version_Type;
    begin
       Result := (Count => 0,
                  Versions => (others => 0));
@@ -284,9 +305,12 @@ is
          Cursor := Protocol_Versions.First (Buffer (First .. Last));
          while Index <= Result.Versions'Last and then Protocol_Versions.Valid_Element (Buffer (First .. Last), Cursor) loop
             pragma Loop_Invariant (Index >= Result.Versions'First);
-            Result.Versions (Index) := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Protocol_Versions.Get_Element (Buffer (First .. Last), Cursor)));
+            Version := Protocol_Versions.Get_Element (Buffer (First .. Last), Cursor);
+            if Version.Known then
+               Result.Versions (Index) := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Version.Enum));
+               Index := Index + 1;
+            end if;
             Protocol_Versions.Next (Buffer (First .. Last), Cursor);
-            Index := Index + 1;
          end loop;
          Result.Count := CPP.Uint8_T (Index - 1);
       end if;
@@ -295,12 +319,16 @@ is
    procedure Parse_Supported_Version (Buffer :     RFLX.Types.Bytes;
                                       Result : out CPP.Supported_Version_Record)
    is
+      Version : Protocol_Version_Type;
    begin
       Result := (Version => 0);
 
       Supported_Version.Label (Buffer);
       if Supported_Version.Is_Valid (Buffer) then
-         Result.Version := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Supported_Version.Get_Version (Buffer)));
+         Version :=Supported_Version.Get_Version (Buffer);
+         if Version.Known then
+            Result.Version := CPP.Uint16_T (Convert_To_Protocol_Version_Type_Base (Version.Enum));
+         end if;
       end if;
    end;
 
@@ -310,7 +338,8 @@ is
       First  : RFLX.Types.Length_Type;
       Last   : RFLX.Types.Length_Type;
       Cursor : RFLX.TLS_Handshake.Key_Exchange_Modes.Cursor_Type;
-      Index  :  RFLX.Types.Length_Type := 1;
+      Index  : RFLX.Types.Length_Type := 1;
+      Mode   : Key_Exchange_Mode;
    begin
       Result := (Count => 0,
                  Modes => (others => 0));
@@ -321,9 +350,12 @@ is
          Cursor := Key_Exchange_Modes.First (Buffer (First .. Last));
          while Index <= Result.Modes'Last and then Key_Exchange_Modes.Valid_Element (Buffer (First .. Last), Cursor) loop
             pragma Loop_Invariant (Index >= Result.Modes'First);
-            Result.Modes (Index) := CPP.Uint8_T (Convert_To_Key_Exchange_Mode_Base (Key_Exchange_Modes.Get_Element (Buffer (First .. Last), Cursor)));
+            Mode := Key_Exchange_Modes.Get_Element (Buffer (First .. Last), Cursor);
+            if Mode.Known then
+               Result.Modes (Index) := CPP.Uint8_T (Convert_To_Key_Exchange_Mode_Base (Mode.Enum));
+               Index := Index + 1;
+            end if;
             Key_Exchange_Modes.Next (Buffer (First .. Last), Cursor);
-            Index := Index + 1;
          end loop;
          Result.Count := CPP.Uint8_T (Index - 1);
       end if;

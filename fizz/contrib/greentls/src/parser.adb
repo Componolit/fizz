@@ -114,6 +114,7 @@ is
             Legacy_Session_ID_First  : RFLX.Types.Index_Type;
             Legacy_Session_ID_Last   : RFLX.Types.Index_Type;
             Legacy_Session_ID        : RFLX.Types.Bytes (1 .. 256) := (others => 0);
+            Cipher_Suite             : Cipher_Suite_Type;
             Cipher_Suites_Count      : Natural := 0;
             Cipher_Suites_Cursor     : Cipher_Suites.Cursor_Type;
             Cipher_Suites_First      : RFLX.Types.Index_Type;
@@ -135,8 +136,11 @@ is
             Client_Hello.Get_Cipher_Suites (Buffer, Cipher_Suites_First, Cipher_Suites_Last);
             Cipher_Suites_Cursor := Cipher_Suites.First (Buffer (Cipher_Suites_First .. Cipher_Suites_Last));
             while Cipher_Suites_Count < Cipher_Suite_List'Last and then Cipher_Suites.Valid_Element (Buffer (Cipher_Suites_First .. Cipher_Suites_Last), Cipher_Suites_Cursor) loop
-               Cipher_Suites_Count := Cipher_Suites_Count + 1;
-               Cipher_Suite_List (Cipher_Suites_Count) := CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suites.Get_Element (Buffer (Cipher_Suites_First .. Cipher_Suites_Last), Cipher_Suites_Cursor)));
+               Cipher_Suite := Cipher_Suites.Get_Element (Buffer (Cipher_Suites_First .. Cipher_Suites_Last), Cipher_Suites_Cursor);
+               if Cipher_Suite.Known then
+                  Cipher_Suites_Count := Cipher_Suites_Count + 1;
+                  Cipher_Suite_List (Cipher_Suites_Count) := CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite.Enum));
+               end if;
                Cipher_Suites.Next (Buffer (Cipher_Suites_First .. Cipher_Suites_Last), Cipher_Suites_Cursor);
             end loop;
 
@@ -165,6 +169,8 @@ is
       procedure Parse_SH_Extensions is new Parse_Extensions (SH_Extension, SH_Extensions);
       procedure Parse_HRR_Extensions is new Parse_Extensions (HRR_Extension, HRR_Extensions);
    begin
+      Result := (Tag => 0, Content => (Tag => 0));
+
       if Server_Hello.Is_Valid (Buffer) then
          declare
             Random_First             : RFLX.Types.Index_Type;
@@ -190,36 +196,34 @@ is
 
             Cipher_Suite := Server_Hello.Get_Cipher_Suite (Buffer);
 
-            if Server_Hello.Valid_Extensions (Buffer) then
-               Server_Hello.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
-               Parse_SH_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+            if Cipher_Suite.Known then
+               if Server_Hello.Valid_Extensions (Buffer) then
+                  Server_Hello.Get_Extensions (Buffer, Extensions_First, Extensions_Last);
+                  Parse_SH_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
-               Result := (Tag => 2,
-                          Content => (Tag => 2,
-                                      Server_Hello => (Random,
-                                                       RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
-                                                       Legacy_Session_ID,
-                                                       CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite)),
-                                                       Extensions_Count,
-                                                       Extension_List)));
-            elsif Server_Hello.Valid_HRR_Extensions (Buffer) then
-               Server_Hello.Get_HRR_Extensions (Buffer, Extensions_First, Extensions_Last);
-               Parse_HRR_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
+                  Result := (Tag => 2,
+                             Content => (Tag => 2,
+                                         Server_Hello => (Random,
+                                                          RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
+                                                          Legacy_Session_ID,
+                                                          CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite.Enum)),
+                                                          Extensions_Count,
+                                                          Extension_List)));
+               elsif Server_Hello.Valid_HRR_Extensions (Buffer) then
+                  Server_Hello.Get_HRR_Extensions (Buffer, Extensions_First, Extensions_Last);
+                  Parse_HRR_Extensions (Buffer (Extensions_First .. Extensions_Last), Extensions_Count, Extension_List);
 
-               Result := (Tag => 2,
-                          Content => (Tag => 2,
-                                      Server_Hello => (Random,
-                                                       RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
-                                                       Legacy_Session_ID,
-                                                       CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite)),
-                                                       Extensions_Count,
-                                                       Extension_List)));
-            else
-               Result := (Tag => 0, Content => (Tag => 0));
+                  Result := (Tag => 2,
+                             Content => (Tag => 2,
+                                         Server_Hello => (Random,
+                                                          RFLX.Types.Byte (Server_Hello.Get_Legacy_Session_ID_Length (Buffer)),
+                                                          Legacy_Session_ID,
+                                                          CPP.Uint16_T (Convert_To_Cipher_Suite_Type_Base (Cipher_Suite.Enum)),
+                                                          Extensions_Count,
+                                                          Extension_List)));
+               end if;
             end if;
          end;
-      else
-         Result := (Tag => 0, Content => (Tag => 0));
       end if;
    end Parse_Server_Hello;
 
@@ -425,6 +429,8 @@ is
      Pre => Certificate_Verify.Is_Contained (Buffer)
    is
    begin
+      Result := (Tag => 0, Content => (Tag => 0));
+
       if Certificate_Verify.Is_Valid (Buffer) then
          declare
             Algorithm : Signature_Scheme;
@@ -432,17 +438,17 @@ is
             First     : RFLX.Types.Index_Type;
          begin
             Algorithm := Certificate_Verify.Get_Algorithm (Buffer);
-            Length := Certificate_Verify.Get_Signature_Length (Buffer);
-            First := Certificate_Verify.Get_Signature_First (Buffer);
+            if Algorithm.Known then
+               Length := Certificate_Verify.Get_Signature_Length (Buffer);
+               First := Certificate_Verify.Get_Signature_First (Buffer);
 
-            Result := (Tag => 15,
-                       Content => (Tag => 15,
-                                   Certificate_Verify => (CPP.Uint16_T (Convert_To_Signature_Scheme_Base (Algorithm)),
-                                                          CPP.Uint32_T (Length),
-                                                          CPP.Uint32_T (First - 1))));
+               Result := (Tag => 15,
+                          Content => (Tag => 15,
+                                      Certificate_Verify => (CPP.Uint16_T (Convert_To_Signature_Scheme_Base (Algorithm.Enum)),
+                                                             CPP.Uint32_T (Length),
+                                                             CPP.Uint32_T (First - 1))));
+            end if;
          end;
-      else
-         Result := (Tag => 0, Content => (Tag => 0));
       end if;
    end Parse_Certificate_Verify;
 
@@ -451,6 +457,8 @@ is
      Pre => Finished.Is_Contained (Buffer)
    is
    begin
+      Result := (Tag => 0, Content => (Tag => 0));
+
       if Finished.Is_Valid (Buffer) then
          declare
             First : RFLX.Types.Index_Type;
@@ -463,8 +471,6 @@ is
                                    Finished => (CPP.Uint32_T (Last - First + 1),
                                                 CPP.Uint32_T (First - 1))));
          end;
-      else
-         Result := (Tag => 0, Content => (Tag => 0));
       end if;
    end Parse_Finished;
 
@@ -473,6 +479,8 @@ is
      Pre => Key_Update.Is_Contained (Buffer)
    is
    begin
+      Result := (Tag => 0, Content => (Tag => 0));
+
       if Key_Update.Is_Valid (Buffer) then
          declare
             Request_Update : Key_Update_Request;
@@ -483,8 +491,6 @@ is
                        Content => (Tag => 24,
                                    Key_Update => (Request_Update => CPP.Uint8_T (Convert_To_Key_Update_Request_Base (Request_Update)))));
          end;
-      else
-         Result := (Tag => 0, Content => (Tag => 0));
       end if;
    end Parse_Key_Update;
 
