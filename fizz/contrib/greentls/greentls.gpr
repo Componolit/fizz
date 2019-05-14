@@ -10,7 +10,7 @@ library project GreenTLS is
    for Library_Interface use ("CPP", "RFLX", "RFLX.Types");
 
    package Builder is
-       for Global_Compilation_Switches ("Ada") use ("-g");
+       for Global_Compilation_Switches ("Ada") use ("-g", "-gnatp", "-O3");
    end Builder;
 
 end GreenTLS;
