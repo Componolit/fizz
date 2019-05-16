@@ -2,9 +2,9 @@
   <img width="500" height="216" alt="Fizz" src="logo2x.png">
 </p>
 
-[![Build Status](https://api.travis-ci.org/facebookincubator/fizz.svg?branch=master)](https://travis-ci.org/facebookincubator/fizz)
-
 Fizz is a TLS 1.3 implementation.
+
+__This modified version of Fizz is just a proof of concept and not intended for production. The C++ parser for all protocol messages defined in RFC8446 (TLS 1.3) is replaced by a [SPARK](https://www.adacore.com/about-spark) implementation for which the absence of runtime errors can be proven. The parsing code is generated with [RecordFlux](https://github.com/Componolit/RecordFlux) based on a protocol message specification.__
 
 Fizz currently supports TLS 1.3 drafts 28, 26 (both wire-compatible with the
 final specification), and 23. All major handshake modes are supported, including
@@ -17,6 +17,8 @@ More background and details are available on the
 
 Fizz largely depends on three libraries: [folly](https://www.github.com/facebook/folly),
 [OpenSSL](https://www.openssl.org/), and [libsodium](https://github.com/jedisct1/libsodium).
+
+__Additionally, [RecordFlux](https://github.com/Componolit/RecordFlux) and [GNAT Community 2018](https://www.adacore.com/download) are needed to generate and build the parsing code.__
 
 ## Source Layout
 - `fizz/crypto`:   Cryptographic primitive implementations (most are wrapping
