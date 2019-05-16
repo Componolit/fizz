@@ -227,6 +227,9 @@ is
       end record
      with
        Convention => C;
+   pragma Warnings (Off, "pragma ""SUPPRESS_INITIALIZATION"" ignored (not yet supported)");
+   pragma Suppress_Initialization (Handshake_Record);
+   pragma Warnings (On, "pragma ""SUPPRESS_INITIALIZATION"" ignored (not yet supported)");
 
    type Alert_Record is
       record
